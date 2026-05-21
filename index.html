@@ -628,6 +628,21 @@
   </div>
 </div>
 
+
+<!-- BETREIBER LOCK OVERLAY -->
+<div class="locked-overlay" id="betreiberLockOverlay" style="display:none;">
+  <div class="lock-box">
+    <div class="lock-icon">🏢</div>
+    <h3>Betreiberbereich</h3>
+    <p>Nur für Systembetreiber</p>
+    <input type="password" id="betreiberPwInput" placeholder="Betreiberpasswort" style="text-align:center;font-size:18px;letter-spacing:4px;">
+    <div class="flex-row mt-8">
+      <button class="btn btn-secondary" onclick="document.getElementById('betreiberLockOverlay').style.display='none'">Abbrechen</button>
+      <button class="btn btn-primary" onclick="checkBetreiberPw()">Einloggen</button>
+    </div>
+    <div id="betreiberPwError" style="color:red;font-size:13px;margin-top:8px;"></div>
+  </div>
+</div>
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal" id="modalBox">
@@ -658,6 +673,7 @@
   <div class="card">
     <div class="card-title">Admin / Veranstalter</div>
     <button class="btn btn-outline btn-full" onclick="openAdminLogin()">⚙️ Admin-Bereich öffnen</button>
+    <button class="btn btn-outline btn-full" style="border-color:#888;color:#888;font-size:13px;margin-top:6px;" onclick="openBetreiberLogin()">🏢 Betreiberbereich</button>
   </div>
 </div>
 
@@ -723,6 +739,44 @@
   </div>
 </div>
 
+
+<!-- ===== SCREEN: BETREIBER ===== -->
+<div class="screen" id="screenBetreiber">
+  <div class="card" style="background:linear-gradient(135deg,#1a2a1a,#2d4a2d);color:white;">
+    <div style="font-size:13px;font-weight:700;letter-spacing:1px;opacity:0.7;margin-bottom:4px;">BETREIBERBEREICH</div>
+    <div style="font-size:20px;font-weight:800;">🏢 Systemverwaltung</div>
+    <div style="font-size:12px;opacity:0.7;margin-top:4px;">Passwörter und Zugang</div>
+  </div>
+  <div class="card">
+    <div class="card-title">🔐 Passwörter verwalten</div>
+    <label>Admin-Passwort (aktuell)</label>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <input type="password" id="adminPwDisplay" readonly style="flex:1;background:#f5f5f5;font-size:18px;letter-spacing:4px;font-weight:700;text-align:center;">
+      <button onclick="togglePwVisible('adminPwDisplay',this)" style="padding:10px 14px;background:var(--border);border:none;border-radius:8px;cursor:pointer;font-size:16px;">👁</button>
+    </div>
+    <label>Neues Admin-Passwort</label>
+    <input type="text" id="newAdminPw" placeholder="Neues Passwort eingeben" autocomplete="off">
+    <button class="btn btn-primary btn-full" onclick="saveAdminPassword()">💾 Admin-Passwort speichern</button>
+    <div class="divider"></div>
+    <label>Betreiber-Passwort (aktuell)</label>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <input type="password" id="betreiberPwDisplay" readonly style="flex:1;background:#f5f5f5;font-size:18px;letter-spacing:4px;font-weight:700;text-align:center;">
+      <button onclick="togglePwVisible('betreiberPwDisplay',this)" style="padding:10px 14px;background:var(--border);border:none;border-radius:8px;cursor:pointer;font-size:16px;">👁</button>
+    </div>
+    <label>Neues Betreiber-Passwort</label>
+    <input type="text" id="newBetreiberPw" placeholder="Neues Passwort eingeben" autocomplete="off">
+    <button class="btn btn-primary btn-full" onclick="saveBetreiberPassword()">💾 Betreiber-Passwort speichern</button>
+  </div>
+  <div class="card">
+    <div class="card-title">ℹ️ System-Info</div>
+    <div style="font-size:13px;color:var(--text-muted);line-height:2;">
+      <div>Firebase: <b>golfclub-turnier-app</b></div>
+      <div>Supabase: <b>pukixlbdbdbbsmqobfhj</b></div>
+      <div>Version: <b>1.0</b></div>
+    </div>
+  </div>
+  <button class="btn btn-secondary btn-full" onclick="goHome()" style="margin-bottom:20px;">🏠 Zurück zum Start</button>
+</div>
 <div style="height:60px;"></div>
 
 <script>
@@ -740,8 +794,10 @@ const FIREBASE_CONFIG = {
 };
 
 const SUPABASE_URL = 'https://pukixlbdbdbbsmqobfhj.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB1a2l4bGJkYmRiYnNtcW9iZmhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTMxNzI3NTUsImV4cCI6MjAyODc0ODc1NX0.WMDmAJNHBIzMnbBVJ6tSLpmmTp_Qek0W1UNVs22KZEM';
-const ADMIN_PASSWORD = 'golf2024';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB1a2l4bGJkYmRiYnNtcW9iZmhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNDEyNzksImV4cCI6MjA5MjgxNzI3OX0.DPTM9aJmVIQaa_Csu0wEvzcgGc7pstM5M0K3GGTgXgk';
+// Passwörter — werden beim Start aus Firebase geladen
+let ADMIN_PASSWORD = 'golf2024';
+let BETREIBER_PASSWORD = '1234';
 
 // ====================================================
 // STATE
@@ -787,24 +843,26 @@ function loadFirebase() {
 // ====================================================
 // SUPABASE
 // ====================================================
-async function sbFetch(path, opts = {}) {
+async function sbFetch(method, path, body) {
+  const h = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_KEY,
+    'Content-Type': 'application/json'
+  };
+  if (method === 'POST') h['Prefer'] = 'return=representation';
   const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Content-Type': 'application/json',
-      ...(opts.headers || {})
-    },
-    ...opts
+    method,
+    headers: h,
+    body: body ? JSON.stringify(body) : undefined
   });
-  if (!res.ok) throw new Error(await res.text());
+  if (!res.ok) throw new Error('SB ' + res.status);
   const text = await res.text();
   return text ? JSON.parse(text) : [];
 }
 
 async function loadCourses() {
   try {
-    savedCourses = await sbFetch('courses?select=*&order=name.asc');
+    savedCourses = await sbFetch('GET', 'courses?select=*&order=name');
   } catch(e) {
     savedCourses = JSON.parse(localStorage.getItem('golf_saved_courses_v2') || '[]');
   }
@@ -1459,8 +1517,11 @@ function loadCourseData() {
   const course = savedCourses[idx];
   if (!course) return;
   document.getElementById('cName').value = course.name || '';
-  const par = course.par || [];
-  const si = course.stroke_index || course.si || [];
+  let par = course.par || [];
+  let si = course.stroke_index || course.si || [];
+  // Supabase speichert als JSON-String
+  if (typeof par === 'string') try { par = JSON.parse(par); } catch(e) { par = []; }
+  if (typeof si === 'string') try { si = JSON.parse(si); } catch(e) { si = []; }
   for (let i=1; i<=18; i++) {
     const pEl = document.getElementById('par'+i);
     const sEl = document.getElementById('si'+i);
@@ -1502,11 +1563,13 @@ async function saveCourseToSupabase() {
     si.push(parseInt(document.getElementById('si'+i).value) || i);
   }
   try {
-    await sbFetch('courses', {
-      method: 'POST',
-      headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ name, par, stroke_index: si })
-    });
+    // Check if exists
+    const ex = await sbFetch('GET', 'courses?name=eq.' + encodeURIComponent(name) + '&select=id');
+    if (ex && ex.length > 0) {
+      await sbFetch('PATCH', 'courses?id=eq.' + ex[0].id, { name, par: JSON.stringify(par), stroke_index: JSON.stringify(si) });
+    } else {
+      await sbFetch('POST', 'courses', { name, par: JSON.stringify(par), stroke_index: JSON.stringify(si) });
+    }
     toast('✅ In Bibliothek gespeichert!');
     await loadCourses();
   } catch(e) {
@@ -2056,11 +2119,96 @@ function calcShots(hole, vorgabe, si) {
   return shots;
 }
 
+
+// ====================================================
+// PASSWÖRTER AUS FIREBASE LADEN
+// ====================================================
+async function loadPasswords() {
+  try {
+    await loadFirebase();
+    const snap = await db.ref('system/passwords').once('value');
+    const data = snap.val();
+    if (data) {
+      if (data.admin) ADMIN_PASSWORD = data.admin;
+      if (data.betreiber) BETREIBER_PASSWORD = data.betreiber;
+    }
+  } catch(e) { /* Fallback auf Defaults */ }
+}
+
+// ====================================================
+// BETREIBER LOGIN
+// ====================================================
+function openBetreiberLogin() {
+  document.getElementById('betreiberPwInput').value = '';
+  document.getElementById('betreiberPwError').textContent = '';
+  document.getElementById('betreiberLockOverlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('betreiberPwInput').focus(), 100);
+}
+
+function checkBetreiberPw() {
+  const pw = document.getElementById('betreiberPwInput').value;
+  if (pw === BETREIBER_PASSWORD) {
+    document.getElementById('betreiberLockOverlay').style.display = 'none';
+    showBetreiberScreen();
+  } else {
+    document.getElementById('betreiberPwError').textContent = '❌ Falsches Passwort';
+  }
+}
+
+document.getElementById('betreiberPwInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkBetreiberPw();
+});
+
+function showBetreiberScreen() {
+  showScreen('screenBetreiber');
+  document.getElementById('headerTitle').textContent = '🏢 Betreiber';
+  document.getElementById('headerSub').textContent = '';
+  document.getElementById('bottomNav').style.display = 'none';
+  document.getElementById('adminPwDisplay').value = ADMIN_PASSWORD;
+  document.getElementById('betreiberPwDisplay').value = BETREIBER_PASSWORD;
+  document.getElementById('newAdminPw').value = '';
+  document.getElementById('newBetreiberPw').value = '';
+}
+
+function togglePwVisible(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁'; }
+}
+
+async function saveAdminPassword() {
+  const newPw = document.getElementById('newAdminPw').value.trim();
+  if (!newPw) { toast('❌ Bitte neues Passwort eingeben'); return; }
+  try {
+    await loadFirebase();
+    await db.ref('system/passwords/admin').set(newPw);
+    ADMIN_PASSWORD = newPw;
+    document.getElementById('adminPwDisplay').value = newPw;
+    document.getElementById('newAdminPw').value = '';
+    state.adminLoggedIn = false;
+    toast('✅ Admin-Passwort gespeichert!');
+  } catch(e) { toast('❌ Fehler: ' + e.message); }
+}
+
+async function saveBetreiberPassword() {
+  const newPw = document.getElementById('newBetreiberPw').value.trim();
+  if (!newPw) { toast('❌ Bitte neues Passwort eingeben'); return; }
+  try {
+    await loadFirebase();
+    await db.ref('system/passwords/betreiber').set(newPw);
+    BETREIBER_PASSWORD = newPw;
+    document.getElementById('betreiberPwDisplay').value = newPw;
+    document.getElementById('newBetreiberPw').value = '';
+    toast('✅ Betreiber-Passwort gespeichert!');
+  } catch(e) { toast('❌ Fehler: ' + e.message); }
+}
+
 // ====================================================
 // INIT
 // ====================================================
 window.addEventListener('load', async () => {
   await loadCourses();
+  await loadPasswords();
 });
 </script>
 </body>
