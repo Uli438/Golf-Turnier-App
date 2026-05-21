@@ -718,11 +718,11 @@
 <!-- ===== SCREEN: ADMIN ===== -->
 <div class="screen" id="screenAdmin">
   <div class="admin-nav" id="adminNav">
-    <button class="admin-nav-btn active" onclick="adminTab('turnier')">🏆 Turnier</button>
-    <button class="admin-nav-btn" onclick="adminTab('spieler')">👥 Spieler</button>
-    <button class="admin-nav-btn" onclick="adminTab('flights')">✈️ Flights</button>
-    <button class="admin-nav-btn" onclick="adminTab('platz')">⛳ Platz</button>
-    <button class="admin-nav-btn" onclick="adminTab('ergebnis')">📋 Ergebnis</button>
+    <button class="admin-nav-btn active" onclick="adminTab('turnier',this)">🏆 Turnier</button>
+    <button class="admin-nav-btn" onclick="adminTab('spieler',this)">👥 Spieler</button>
+    <button class="admin-nav-btn" onclick="adminTab('flights',this)">✈️ Flights</button>
+    <button class="admin-nav-btn" onclick="adminTab('platz',this)">⛳ Platz</button>
+    <button class="admin-nav-btn" onclick="adminTab('ergebnis',this)">📋 Ergebnis</button>
   </div>
   <div id="adminContent"></div>
 </div>
@@ -956,14 +956,16 @@ function showAdminScreen() {
 // ====================================================
 // ADMIN TABS
 // ====================================================
-function adminTab(tab) {
+function adminTab(tab, el) {
   state.adminCurrentTab = tab;
-  document.querySelectorAll('.admin-nav-btn').forEach((b,i) => {
-    b.classList.toggle('active', b.textContent.toLowerCase().includes(tab.substring(0,3)));
-  });
-  // Fix active state
   document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+  if (el) el.classList.add('active');
+  else {
+    // Fallback: match by text
+    document.querySelectorAll('.admin-nav-btn').forEach(b => {
+      if (b.textContent.trim().toLowerCase().includes(tab.substring(0,4))) b.classList.add('active');
+    });
+  }
   renderAdminTab(tab);
 }
 
@@ -1083,7 +1085,9 @@ async function createTournament() {
   // Direkt zum Spieler-Tab wechseln
   setTimeout(() => {
     document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.admin-nav-btn')[1].classList.add('active');
+    document.querySelectorAll('.admin-nav-btn').forEach(b => {
+      if (b.textContent.includes('Spieler')) b.classList.add('active');
+    });
     renderAdminTab('spieler');
   }, 500);
 }
@@ -1104,6 +1108,8 @@ async function loadTournamentAdmin(code) {
   state.tournamentData = data;
   document.getElementById('headerSub').textContent = code + ' · ' + (data.name || '');
   toast('✅ Turnier ' + code + ' geladen');
+  // Nav-Buttons aktualisieren — aktiver Tab bleibt
+  renderAdminTab(state.adminCurrentTab);
 }
 
 // ====================================================
@@ -1219,7 +1225,10 @@ async function removePlayer(id) {
 // ====================================================
 async function renderAdminFlights(c) {
   if (!state.tournamentCode) {
-    c.innerHTML = '<div class="card"><p class="text-muted text-center">Bitte erst ein Turnier laden</p></div>';
+    c.innerHTML = `<div class="card">
+      <p class="text-muted text-center" style="margin-bottom:12px;">Kein Turnier aktiv</p>
+      <p class="text-muted text-center" style="font-size:13px;">Bitte zuerst im Tab <b>Turnier</b> ein Turnier öffnen.</p>
+    </div>`;
     return;
   }
 
@@ -1270,7 +1279,8 @@ async function renderAdminFlights(c) {
 }
 
 function renderFlightSlotHtml(fid, f, players) {
-  const fPlayers = (f.players || []).map(pid => players[pid] ? {id: pid, ...players[pid]} : null).filter(Boolean);
+  const rawPlayers = Array.isArray(f.players) ? f.players : Object.values(f.players || {});
+  const fPlayers = rawPlayers.map(pid => players[pid] ? {id: pid, ...players[pid]} : null).filter(Boolean);
   return `
     <div class="flight-slot" id="fs_${fid}">
       <div class="flight-slot-header">
@@ -1546,26 +1556,36 @@ function loadCourseData() {
 }
 
 async function saveCourseToTournament() {
-  if (!state.tournamentCode) { toast('❌ Kein Turnier aktiv'); return; }
+  if (!state.tournamentCode) { toast('❌ Kein Turnier aktiv — bitte erst Turnier öffnen'); return; }
   const name = document.getElementById('cName').value.trim();
   if (!name) { toast('❌ Platzname erforderlich'); return; }
 
   const par = [], si = [];
   for (let i=1; i<=18; i++) {
-    par.push(parseInt(document.getElementById('par'+i).value) || 4);
-    si.push(parseInt(document.getElementById('si'+i).value) || i);
+    par.push(parseInt(document.getElementById('par'+i)?.value) || 4);
+    si.push(parseInt(document.getElementById('si'+i)?.value) || i);
   }
 
   const tees = {};
   ['Gelb','Weiß','Rot','Blau','Schwarz','Gold'].forEach(t => {
-    const cr = parseFloat(document.getElementById('cr_'+t).value);
-    const slope = parseFloat(document.getElementById('slope_'+t).value);
+    const crEl = document.getElementById('cr_'+t);
+    const slopeEl = document.getElementById('slope_'+t);
+    if (!crEl || !slopeEl) return;
+    const cr = parseFloat(crEl.value);
+    const slope = parseFloat(slopeEl.value);
     if (!isNaN(cr) && !isNaN(slope)) tees[t] = { cr, slope };
   });
 
-  await loadFirebase();
-  await db.ref('tournaments/' + state.tournamentCode + '/course').set({ name, par, si, tees });
-  toast('✅ Platz gespeichert!');
+  try {
+    await loadFirebase();
+    await db.ref('tournaments/' + state.tournamentCode + '/course').set({ name, par, si, tees });
+    // Update local state too
+    if (!state.tournamentData) state.tournamentData = {};
+    state.tournamentData.course = { name, par, si, tees };
+    toast('✅ Platz "' + name + '" gespeichert!');
+  } catch(e) {
+    toast('❌ Fehler: ' + e.message);
+  }
 }
 
 async function saveCourseToSupabase() {
@@ -1750,7 +1770,8 @@ async function loadPlayerFlight() {
   let myFlight = null;
   let myFlightId = null;
   Object.entries(flights).forEach(([fid, f]) => {
-    if ((f.players || []).includes(state.playerId)) {
+    const fPlayerList = Array.isArray(f.players) ? f.players : Object.values(f.players || {});
+    if (fPlayerList.includes(state.playerId)) {
       myFlight = f;
       myFlightId = fid;
     }
@@ -1822,7 +1843,7 @@ function renderScoreEntries(hole, par, si, players) {
   container.innerHTML = flightPlayerIds.map(pid => {
     const p = players[pid];
     if (!p) return '';
-    const sc = (scores[pid] || {})[hole] || 0;
+    const sc = (scores[pid] || {})[hole] || (scores[pid] || {})[String(hole)] || 0;
     const isMe = pid === state.playerId;
     const teeColors = {gelb:'#f1c40f',weiß:'#bdc3c7',rot:'#e74c3c',blau:'#3498db',schwarz:'#2c3e50',gold:'#d4a017'};
     const teeColor = teeColors[(p.tee||'').toLowerCase()] || '#ccc';
@@ -1859,7 +1880,8 @@ function getScoreClass(score, par) {
 
 function getScoreLabel(score, par) {
   const diff = score - par;
-  if (diff <= -2) return diff <= -2 ? (diff<=-2?'Eagle':'Albatros') : 'Eagle';
+  if (diff <= -3) return 'Albatros';
+  if (diff === -2) return 'Eagle';
   if (diff === -1) return 'Birdie';
   if (diff === 0) return 'Par';
   if (diff === 1) return 'Bogey';
@@ -1873,7 +1895,7 @@ async function changeScore(pid, hole, delta) {
   if (!state.scores[round]) state.scores[round] = {};
   if (!state.scores[round][pid]) state.scores[round][pid] = {};
 
-  const current = state.scores[round][pid][hole] || 0;
+  const current = (state.scores[round][pid] || {})[hole] || (state.scores[round][pid] || {})[String(hole)] || 0;
   const newVal = Math.max(1, Math.min(15, current + delta));
   state.scores[round][pid][hole] = newVal;
 
@@ -1900,7 +1922,7 @@ function renderHoleDots(par) {
 
   container.innerHTML = Array.from({length:18},(_,i)=>{
     const h = i+1;
-    const filled = !!myScores[h];
+    const filled = !!(myScores[h] || myScores[String(h)]);
     const isCurrent = h === state.currentHole;
     return `<div class="hole-dot ${filled?'filled':'empty'} ${isCurrent?'current':''}" onclick="goToHole(${h})">${h}</div>`;
   }).join('');
@@ -1909,7 +1931,7 @@ function renderHoleDots(par) {
 function updateHoleDot(hole) {
   const round = state.currentRound;
   const myScores = (state.scores[round] || {})[state.playerId] || {};
-  const filled = !!myScores[hole];
+  const filled = !!(myScores[hole] || myScores[String(hole)]);
   const dots = document.querySelectorAll('.hole-dot');
   if (dots[hole-1]) {
     dots[hole-1].className = `hole-dot ${filled?'filled':'empty'} ${hole===state.currentHole?'current':''}`;
@@ -1925,7 +1947,7 @@ function renderMyOverview(par, si, players) {
 
   let gross = 0, net = 0, stab = 0, holes = 0;
   for (let h=1; h<=18; h++) {
-    const sc = myScores[h];
+    const sc = myScores[h] || myScores[String(h)];
     if (!sc) continue;
     holes++;
     gross += sc;
@@ -1935,7 +1957,8 @@ function renderMyOverview(par, si, players) {
   }
 
   const totalPar = par.reduce((a,b)=>a+b, 0);
-  const playedPar = par.slice(0, holes > 0 ? Math.max(...Object.keys(myScores).map(Number)) : 0).reduce((a,b)=>a+b,0);
+  const playedKeys = Object.keys(myScores).map(Number).filter(n => !isNaN(n));
+  const playedPar = par.slice(0, holes > 0 && playedKeys.length > 0 ? Math.max(...playedKeys) : 0).reduce((a,b)=>a+b,0);
 
   document.getElementById('myScoreOverview').innerHTML = `
     <div class="input-row-3">
