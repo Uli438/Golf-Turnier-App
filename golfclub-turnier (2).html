@@ -1,0 +1,2067 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Golfclub Turnier</title>
+<style>
+  :root {
+    --bg: #daeeff;
+    --card: #ffffff;
+    --primary: #1a6b3c;
+    --primary-light: #2d9556;
+    --accent: #e8f5e9;
+    --danger: #c0392b;
+    --warning: #e67e22;
+    --text: #1a1a1a;
+    --text-muted: #666;
+    --border: #cde4f5;
+    --shadow: 0 2px 8px rgba(0,0,0,0.1);
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+  /* ===== HEADER ===== */
+  .header {
+    background: var(--primary);
+    color: white;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  .header h1 { font-size: 18px; font-weight: 700; }
+  .header .sub { font-size: 12px; opacity: 0.8; }
+  .btn-icon { background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 4px 8px; }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
+  .screen.active { display: block; }
+
+  /* ===== CARDS ===== */
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    display: inline-block;
+    padding: 11px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-light); }
+  .btn-secondary { background: var(--border); color: var(--text); }
+  .btn-danger { background: var(--danger); color: white; }
+  .btn-warning { background: var(--warning); color: white; }
+  .btn-full { width: 100%; display: block; margin-bottom: 10px; }
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+  .btn-outline { background: none; border: 2px solid var(--primary); color: var(--primary); }
+
+  /* ===== INPUTS ===== */
+  input, select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    background: white;
+    color: var(--text);
+    margin-bottom: 10px;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--primary); }
+  label { font-size: 13px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px; }
+  .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .input-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+  /* ===== START SCREEN ===== */
+  .start-logo {
+    text-align: center;
+    padding: 30px 0 20px;
+  }
+  .start-logo .emoji { font-size: 60px; }
+  .start-logo h2 { font-size: 26px; font-weight: 800; color: var(--primary); margin: 8px 0 4px; }
+  .start-logo p { color: var(--text-muted); font-size: 14px; }
+  .code-input-big {
+    font-size: 28px !important;
+    text-align: center;
+    letter-spacing: 8px;
+    font-weight: 700;
+    padding: 14px !important;
+  }
+
+  /* ===== TABS ===== */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .tab {
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    background: var(--border);
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .tab.active { background: var(--primary); color: white; }
+
+  /* ===== BADGE ===== */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .badge-green { background: #d4edda; color: #155724; }
+  .badge-blue { background: #cce5ff; color: #004085; }
+  .badge-orange { background: #fff3cd; color: #856404; }
+  .badge-red { background: #f8d7da; color: #721c24; }
+  .badge-gray { background: #e9ecef; color: #495057; }
+
+  /* ===== FLIGHT CARD ===== */
+  .flight-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .flight-header {
+    background: var(--primary);
+    color: white;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .flight-header h3 { font-size: 15px; font-weight: 700; }
+  .flight-body { padding: 12px; }
+  .player-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    background: var(--accent);
+    gap: 10px;
+  }
+  .player-row .name { flex: 1; font-weight: 600; font-size: 14px; }
+  .player-row .hcp { color: var(--text-muted); font-size: 13px; min-width: 60px; }
+  .player-row .tee-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 6px;
+    color: white;
+  }
+
+  /* ===== SCORE TABLE ===== */
+  .score-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .score-table th {
+    background: var(--primary);
+    color: white;
+    padding: 8px 6px;
+    text-align: center;
+    font-size: 12px;
+  }
+  .score-table td {
+    padding: 6px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .score-table tr:last-child td { border-bottom: none; }
+  .score-table .hole-col { background: var(--border); font-weight: 700; }
+  .score-input-td { padding: 2px !important; }
+  .score-input-td input {
+    width: 38px;
+    text-align: center;
+    padding: 5px 2px;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  /* ===== STEPPER ===== */
+  .stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: center;
+  }
+  .stepper-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--primary);
+    background: white;
+    color: var(--primary);
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .stepper-val {
+    min-width: 28px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  /* ===== LEADERBOARD ===== */
+  .lb-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    background: var(--card);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    gap: 10px;
+  }
+  .lb-pos {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .lb-pos.gold { background: #ffd700; color: #5a4000; }
+  .lb-pos.silver { background: #c0c0c0; color: #333; }
+  .lb-pos.bronze { background: #cd7f32; color: white; }
+  .lb-name { flex: 1; font-weight: 600; font-size: 14px; }
+  .lb-detail { font-size: 12px; color: var(--text-muted); }
+  .lb-score { font-size: 20px; font-weight: 800; color: var(--primary); min-width: 40px; text-align: right; }
+
+  /* ===== ADMIN ===== */
+  .admin-section { margin-bottom: 20px; }
+  .admin-section-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .player-admin-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background: var(--accent);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .player-admin-row .pname { font-weight: 700; flex: 1; min-width: 100px; }
+  .player-admin-row .phcp { color: var(--text-muted); font-size: 13px; }
+
+  /* ===== FLIGHT BUILDER ===== */
+  .flight-builder { }
+  .unassigned-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 44px;
+    padding: 8px;
+    background: #f0f0f0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border: 2px dashed #ccc;
+  }
+  .player-chip {
+    padding: 5px 10px;
+    background: var(--primary);
+    color: white;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    transition: 0.15s;
+  }
+  .player-chip:hover { background: var(--primary-light); }
+  .player-chip.female { background: #d63384; }
+  .flight-slot {
+    background: var(--card);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1.5px solid var(--border);
+  }
+  .flight-slot-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .flight-slot-header strong { font-size: 14px; color: var(--primary); }
+  .flight-drop-zone {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 36px;
+    padding: 6px;
+    background: var(--accent);
+    border-radius: 6px;
+    border: 2px dashed var(--primary-light);
+  }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  }
+  .modal h3 { font-size: 17px; font-weight: 800; color: var(--primary); margin-bottom: 14px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 14px; }
+  .modal-actions .btn { flex: 1; }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1a1a1a;
+    color: white;
+    padding: 12px 22px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 999;
+    transition: transform 0.3s;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ===== MISC ===== */
+  .divider { height: 1px; background: var(--border); margin: 14px 0; }
+  .text-center { text-align: center; }
+  .text-muted { color: var(--text-muted); font-size: 13px; }
+  .flex-row { display: flex; align-items: center; gap: 10px; }
+  .flex-row .btn { flex: 1; }
+  .mt-8 { margin-top: 8px; }
+  .mt-12 { margin-top: 12px; }
+  .hole-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .hole-nav .hole-num { font-size: 22px; font-weight: 800; color: var(--primary); }
+  .hole-nav .hole-info { font-size: 13px; color: var(--text-muted); text-align: center; }
+  .par-indicator {
+    display: inline-block;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    margin-left: 6px;
+  }
+  .score-relative {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 4px;
+  }
+  .eagle { background: #ffd700; color: #333; }
+  .birdie { background: #ff6b6b; color: white; }
+  .par-score { background: #e9ecef; color: #333; }
+  .bogey { background: #74b9ff; color: white; }
+  .double { background: #a29bfe; color: white; }
+  .triple { background: #fd79a8; color: white; }
+
+  .loading { text-align: center; padding: 40px; color: var(--text-muted); }
+  .loading-spinner {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .info-box {
+    background: var(--accent);
+    border-left: 3px solid var(--primary);
+    padding: 10px 14px;
+    border-radius: 0 8px 8px 0;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  /* Score Color Coding */
+  .s-eagle { color: #d4a017; font-weight: 800; }
+  .s-birdie { color: #c0392b; font-weight: 700; }
+  .s-par { color: #2c3e50; }
+  .s-bogey { color: #2980b9; }
+  .s-double { color: #8e44ad; }
+  .s-triple { color: #e74c3c; font-style: italic; }
+
+  /* Admin locked */
+  .locked-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .lock-box {
+    background: white;
+    border-radius: 14px;
+    padding: 28px;
+    width: 100%;
+    max-width: 340px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  }
+  .lock-box .lock-icon { font-size: 48px; margin-bottom: 12px; }
+  .lock-box h3 { font-size: 18px; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
+  .lock-box p { color: var(--text-muted); font-size: 13px; margin-bottom: 16px; }
+
+  /* Round tabs */
+  .round-tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+  .round-tab {
+    flex: 1;
+    padding: 8px;
+    text-align: center;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    background: white;
+    color: var(--text-muted);
+  }
+  .round-tab.active { border-color: var(--primary); background: var(--primary); color: white; }
+  .round-tab.done { border-color: var(--primary-light); color: var(--primary-light); }
+
+  /* Tee color dots */
+  .tee-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 4px;
+  }
+  .tee-yellow { background: #f1c40f; }
+  .tee-white { background: #ecf0f1; border: 1px solid #ccc; }
+  .tee-red { background: #e74c3c; }
+  .tee-blue { background: #3498db; }
+  .tee-black { background: #2c3e50; }
+  .tee-gold { background: #d4a017; }
+
+  /* Format badge colors */
+  .fmt-stableford { background: #d4edda; color: #155724; }
+  .fmt-stroke { background: #cce5ff; color: #004085; }
+  .fmt-scramble { background: #fff3cd; color: #856404; }
+  .fmt-bestball { background: #f8d7da; color: #721c24; }
+
+  /* Admin nav */
+  .admin-nav {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    margin-bottom: 14px;
+    padding-bottom: 2px;
+  }
+  .admin-nav-btn {
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 2px solid var(--border);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    background: white;
+    color: var(--text-muted);
+  }
+  .admin-nav-btn.active { border-color: var(--primary); background: var(--primary); color: white; }
+
+  /* Drag handle */
+  .drag-handle { cursor: grab; color: var(--text-muted); font-size: 16px; padding: 0 4px; }
+  
+  /* Table final */
+  .final-table { width: 100%; border-collapse: collapse; }
+  .final-table th { 
+    background: var(--primary); 
+    color: white; 
+    padding: 10px 8px; 
+    font-size: 12px;
+    text-align: center;
+  }
+  .final-table td { 
+    padding: 9px 8px; 
+    text-align: center; 
+    border-bottom: 1px solid var(--border); 
+    font-size: 13px;
+  }
+  .final-table tr:nth-child(even) td { background: var(--accent); }
+  .final-table .rank-1 td { background: #fffde7; font-weight: 700; }
+  .final-table .rank-2 td { background: #f5f5f5; }
+  .final-table .rank-3 td { background: #fbe9e7; }
+
+  /* Hole overview dots */
+  .hole-dots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .hole-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 2px solid transparent;
+  }
+  .hole-dot.empty { background: #e9ecef; color: #999; border-color: #ddd; }
+  .hole-dot.filled { background: var(--primary); color: white; }
+  .hole-dot.current { border-color: var(--warning); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header" id="mainHeader">
+  <div>
+    <div id="headerTitle" style="font-size:18px;font-weight:700;">⛳ Golfclub Turnier</div>
+    <div class="sub" id="headerSub"></div>
+  </div>
+  <div style="display:flex;gap:4px;">
+    <button class="btn-icon" id="btnAdmin" title="Admin" onclick="openAdminLogin()">⚙️</button>
+    <button class="btn-icon" id="btnHome" onclick="goHome()" title="Start">🏠</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ADMIN LOCK OVERLAY -->
+<div class="locked-overlay" id="adminLockOverlay" style="display:none;">
+  <div class="lock-box">
+    <div class="lock-icon">🔐</div>
+    <h3>Admin-Bereich</h3>
+    <p>Bitte Passwort eingeben</p>
+    <input type="password" id="adminPwInput" placeholder="Passwort" style="text-align:center;font-size:18px;letter-spacing:4px;">
+    <div class="flex-row mt-8">
+      <button class="btn btn-secondary" onclick="document.getElementById('adminLockOverlay').style.display='none'">Abbrechen</button>
+      <button class="btn btn-primary" onclick="checkAdminPw()">Einloggen</button>
+    </div>
+    <div id="pwError" style="color:red;font-size:13px;margin-top:8px;"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalBox">
+    <h3 id="modalTitle">Titel</h3>
+    <div id="modalBody"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<!-- ===== SCREEN: START ===== -->
+<div class="screen active" id="screenStart">
+  <div class="start-logo">
+    <div class="emoji">⛳</div>
+    <h2>Golfclub Turnier</h2>
+    <p>Livescoring für alle Formate</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Turnier beitreten</div>
+    <label>3-stelliger Turniercode</label>
+    <input type="text" id="joinCode" class="code-input-big" maxlength="3" placeholder="---" 
+           oninput="this.value=this.value.toUpperCase()" style="text-transform:uppercase;">
+    <label>Dein Name</label>
+    <input type="text" id="joinName" placeholder="z.B. Max Mustermann">
+    <button class="btn btn-primary btn-full" onclick="joinTournament()">🏌️ Beitreten</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Admin / Veranstalter</div>
+    <button class="btn btn-outline btn-full" onclick="openAdminLogin()">⚙️ Admin-Bereich öffnen</button>
+  </div>
+</div>
+
+<!-- ===== SCREEN: SPIELER (Score-Eingabe) ===== -->
+<div class="screen" id="screenPlayer">
+  <div id="playerFlightInfo" class="card" style="margin-bottom:10px;">
+    <div id="flightInfoContent"></div>
+  </div>
+
+  <!-- Loch-Navigation -->
+  <div class="card">
+    <div class="hole-nav">
+      <button class="btn btn-secondary btn-sm" onclick="prevHole()">◀ Zurück</button>
+      <div style="text-align:center;">
+        <div class="hole-num" id="holeNum">Loch 1</div>
+        <div class="hole-info" id="holeInfo">Par 4 · SI 7</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="nextHole()">Weiter ▶</button>
+    </div>
+
+    <!-- Score-Eingabe für Spieler im Flight -->
+    <div id="scoreEntries"></div>
+
+    <div class="divider"></div>
+    <div class="hole-dots" id="holeDots"></div>
+  </div>
+
+  <!-- Mein Score Übersicht -->
+  <div class="card">
+    <div class="card-title">📊 Mein Überblick</div>
+    <div id="myScoreOverview"></div>
+  </div>
+</div>
+
+<!-- ===== SCREEN: LEADERBOARD ===== -->
+<div class="screen" id="screenLeaderboard">
+  <div class="tabs" id="lbFormatTabs"></div>
+  <div class="round-tabs" id="lbRoundTabs"></div>
+  <div id="leaderboardContent"></div>
+</div>
+
+<!-- ===== SCREEN: ADMIN ===== -->
+<div class="screen" id="screenAdmin">
+  <div class="admin-nav" id="adminNav">
+    <button class="admin-nav-btn active" onclick="adminTab('turnier')">🏆 Turnier</button>
+    <button class="admin-nav-btn" onclick="adminTab('spieler')">👥 Spieler</button>
+    <button class="admin-nav-btn" onclick="adminTab('flights')">✈️ Flights</button>
+    <button class="admin-nav-btn" onclick="adminTab('platz')">⛳ Platz</button>
+    <button class="admin-nav-btn" onclick="adminTab('ergebnis')">📋 Ergebnis</button>
+  </div>
+  <div id="adminContent"></div>
+</div>
+
+<!-- BOTTOM NAV (shown when in tournament) -->
+<div id="bottomNav" style="display:none;position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);display:none;z-index:50;">
+  <div style="display:flex;max-width:600px;margin:0 auto;">
+    <button class="btn" style="flex:1;border-radius:0;padding:12px 4px;font-size:12px;background:none;border:none;color:var(--text-muted);" onclick="showScreen('screenPlayer')" id="navPlayer">
+      🏌️<br>Score
+    </button>
+    <button class="btn" style="flex:1;border-radius:0;padding:12px 4px;font-size:12px;background:none;border:none;color:var(--text-muted);" onclick="showLeaderboard()" id="navLB">
+      📊<br>Tabelle
+    </button>
+  </div>
+</div>
+
+<div style="height:60px;"></div>
+
+<script>
+// ====================================================
+// FIREBASE CONFIG
+// ====================================================
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyA4mStUt3AJvQNJM4e6lmDkGKHFV0h24Eg",
+  authDomain: "golfclub-turnier-app.firebaseapp.com",
+  databaseURL: "https://golfclub-turnier-app-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "golfclub-turnier-app",
+  storageBucket: "golfclub-turnier-app.firebasestorage.app",
+  messagingSenderId: "330349122013",
+  appId: "1:330349122013:web:542862ca4e0279b372e634"
+};
+
+const SUPABASE_URL = 'https://pukixlbdbdbbsmqobfhj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB1a2l4bGJkYmRiYnNtcW9iZmhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTMxNzI3NTUsImV4cCI6MjAyODc0ODc1NX0.WMDmAJNHBIzMnbBVJ6tSLpmmTp_Qek0W1UNVs22KZEM';
+const ADMIN_PASSWORD = 'golf2024';
+
+// ====================================================
+// STATE
+// ====================================================
+let db = null;
+let state = {
+  tournamentCode: null,
+  tournamentData: null,
+  playerName: null,
+  playerId: null,
+  currentHole: 1,
+  currentRound: 1,
+  adminLoggedIn: false,
+  adminCurrentTab: 'turnier',
+  scores: {}, // scores[round][playerId][hole]
+  listeners: []
+};
+
+let savedCourses = [];
+
+// ====================================================
+// FIREBASE INIT
+// ====================================================
+function loadFirebase() {
+  return new Promise((resolve) => {
+    if (db) { resolve(); return; }
+    const s1 = document.createElement('script');
+    s1.src = 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js';
+    s1.onload = () => {
+      const s2 = document.createElement('script');
+      s2.src = 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js';
+      s2.onload = () => {
+        if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+        db = firebase.database();
+        resolve();
+      };
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s1);
+  });
+}
+
+// ====================================================
+// SUPABASE
+// ====================================================
+async function sbFetch(path, opts = {}) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      ...(opts.headers || {})
+    },
+    ...opts
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+async function loadCourses() {
+  try {
+    savedCourses = await sbFetch('courses?select=*&order=name.asc');
+  } catch(e) {
+    savedCourses = JSON.parse(localStorage.getItem('golf_saved_courses_v2') || '[]');
+  }
+}
+
+// ====================================================
+// TOAST
+// ====================================================
+function toast(msg, dur = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+// ====================================================
+// MODAL
+// ====================================================
+function openModal(title, body, actions) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = body;
+  document.getElementById('modalActions').innerHTML = actions || '';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+
+// ====================================================
+// SCREEN MANAGEMENT
+// ====================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function goHome() {
+  if (state.tournamentCode) {
+    if (!confirm('Turnier verlassen?')) return;
+  }
+  state.tournamentCode = null;
+  state.tournamentData = null;
+  state.playerName = null;
+  state.playerId = null;
+  document.getElementById('bottomNav').style.display = 'none';
+  document.getElementById('headerSub').textContent = '';
+  document.getElementById('headerTitle').textContent = '⛳ Golfclub Turnier';
+  showScreen('screenStart');
+}
+
+// ====================================================
+// ADMIN LOGIN
+// ====================================================
+function openAdminLogin() {
+  if (state.adminLoggedIn) {
+    showAdminScreen();
+    return;
+  }
+  document.getElementById('adminPwInput').value = '';
+  document.getElementById('pwError').textContent = '';
+  document.getElementById('adminLockOverlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('adminPwInput').focus(), 100);
+}
+
+function checkAdminPw() {
+  const pw = document.getElementById('adminPwInput').value;
+  if (pw === ADMIN_PASSWORD) {
+    state.adminLoggedIn = true;
+    document.getElementById('adminLockOverlay').style.display = 'none';
+    showAdminScreen();
+  } else {
+    document.getElementById('pwError').textContent = '❌ Falsches Passwort';
+  }
+}
+
+document.getElementById('adminPwInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkAdminPw();
+});
+
+function showAdminScreen() {
+  showScreen('screenAdmin');
+  document.getElementById('headerTitle').textContent = '⚙️ Admin';
+  document.getElementById('bottomNav').style.display = 'none';
+  renderAdminTab(state.adminCurrentTab);
+}
+
+// ====================================================
+// ADMIN TABS
+// ====================================================
+function adminTab(tab) {
+  state.adminCurrentTab = tab;
+  document.querySelectorAll('.admin-nav-btn').forEach((b,i) => {
+    b.classList.toggle('active', b.textContent.toLowerCase().includes(tab.substring(0,3)));
+  });
+  // Fix active state
+  document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderAdminTab(tab);
+}
+
+function renderAdminTab(tab) {
+  const c = document.getElementById('adminContent');
+  switch(tab) {
+    case 'turnier': renderAdminTurnier(c); break;
+    case 'spieler': renderAdminSpieler(c); break;
+    case 'flights': renderAdminFlights(c); break;
+    case 'platz': renderAdminPlatz(c); break;
+    case 'ergebnis': renderAdminErgebnis(c); break;
+  }
+}
+
+// ====================================================
+// ADMIN — TURNIER
+// ====================================================
+function renderAdminTurnier(c) {
+  const formats = ['Stableford','Stroke Play (Brutto)','Stroke Play (Netto)','Scramble','Best Ball','Texas Scramble'];
+  const tees = ['Gelb','Weiß','Rot','Blau','Schwarz','Gold'];
+
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-title">🏆 Neues Turnier erstellen</div>
+      <label>Turniername</label>
+      <input type="text" id="aName" placeholder="z.B. Clubmeisterschaft 2024">
+      <label>Spielformat</label>
+      <select id="aFormat">
+        ${formats.map(f => `<option>${f}</option>`).join('')}
+      </select>
+      <label>Anzahl Runden</label>
+      <select id="aRounds">
+        <option value="1">1 Runde</option>
+        <option value="2">2 Runden</option>
+        <option value="3">3 Runden</option>
+        <option value="4">4 Runden</option>
+      </select>
+      <label>Turnier-Code (3 Buchstaben/Zahlen)</label>
+      <div class="flex-row">
+        <input type="text" id="aCode" maxlength="3" placeholder="ABC" oninput="this.value=this.value.toUpperCase()" style="text-transform:uppercase;letter-spacing:6px;font-weight:700;font-size:18px;">
+        <button class="btn btn-secondary btn-sm" onclick="genCode()" style="white-space:nowrap;">🎲 Zufällig</button>
+      </div>
+      <button class="btn btn-primary btn-full mt-8" onclick="createTournament()">✅ Turnier erstellen</button>
+    </div>
+
+    <div class="card" id="activeTournamentCard">
+      <div class="card-title">📋 Aktive Turniere</div>
+      <div id="activeTournamentsList"><div class="loading"><div class="loading-spinner"></div><br>Lade...</div></div>
+    </div>
+  `;
+  genCode();
+  loadActiveTournaments();
+}
+
+function genCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i=0; i<3; i++) code += chars[Math.floor(Math.random()*chars.length)];
+  document.getElementById('aCode').value = code;
+}
+
+async function loadActiveTournaments() {
+  await loadFirebase();
+  const snap = await db.ref('tournaments').once('value');
+  const data = snap.val() || {};
+  const list = document.getElementById('activeTournamentsList');
+  const entries = Object.entries(data);
+  if (!entries.length) {
+    list.innerHTML = '<p class="text-muted text-center">Noch keine Turniere</p>';
+    return;
+  }
+  list.innerHTML = entries.map(([code, t]) => `
+    <div class="flight-slot" style="margin-bottom:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <strong style="font-size:16px;color:var(--primary);">${code}</strong>
+          <span style="font-size:13px;margin-left:8px;">${t.name || '–'}</span>
+        </div>
+        <span class="badge badge-green">${t.status || 'aktiv'}</span>
+      </div>
+      <div class="text-muted" style="margin-top:4px;">${t.format || '–'} · ${t.rounds || 1} Runde(n)</div>
+      <div class="flex-row mt-8">
+        <button class="btn btn-primary btn-sm" onclick="loadTournamentAdmin('${code}')">Öffnen</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteTournament('${code}')">Löschen</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function createTournament() {
+  const name = document.getElementById('aName').value.trim();
+  const format = document.getElementById('aFormat').value;
+  const rounds = parseInt(document.getElementById('aRounds').value);
+  const code = document.getElementById('aCode').value.trim().toUpperCase();
+
+  if (!name || !code || code.length !== 3) { toast('❌ Name und 3-stelliger Code erforderlich'); return; }
+
+  await loadFirebase();
+  const exists = await db.ref('tournaments/' + code).once('value');
+  if (exists.val()) { toast('❌ Code bereits vergeben!'); return; }
+
+  await db.ref('tournaments/' + code).set({
+    name, format, rounds,
+    createdAt: Date.now(),
+    status: 'aktiv',
+    players: {},
+    flights: {},
+    scores: {},
+    tees: {}
+  });
+
+  toast('✅ Turnier ' + code + ' erstellt!');
+  state.tournamentCode = code;
+  state.tournamentData = { name, format, rounds };
+  document.getElementById('headerSub').textContent = code + ' · ' + name;
+  loadActiveTournaments();
+}
+
+async function deleteTournament(code) {
+  if (!confirm('Turnier ' + code + ' wirklich löschen? Alle Daten gehen verloren!')) return;
+  await db.ref('tournaments/' + code).remove();
+  toast('🗑️ Turnier gelöscht');
+  loadActiveTournaments();
+}
+
+async function loadTournamentAdmin(code) {
+  await loadFirebase();
+  const snap = await db.ref('tournaments/' + code).once('value');
+  const data = snap.val();
+  if (!data) { toast('❌ Turnier nicht gefunden'); return; }
+  state.tournamentCode = code;
+  state.tournamentData = data;
+  document.getElementById('headerSub').textContent = code + ' · ' + (data.name || '');
+  toast('✅ Turnier ' + code + ' geladen');
+}
+
+// ====================================================
+// ADMIN — SPIELER
+// ====================================================
+function renderAdminSpieler(c) {
+  if (!state.tournamentCode) {
+    c.innerHTML = '<div class="card"><p class="text-muted text-center">Bitte erst ein Turnier laden (Tab "Turnier")</p></div>';
+    return;
+  }
+
+  const tees = ['Gelb','Weiß','Rot','Blau','Schwarz','Gold'];
+
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-title">➕ Spieler hinzufügen</div>
+      <label>Name</label>
+      <input type="text" id="spName" placeholder="Vorname Nachname">
+      <div class="input-row">
+        <div>
+          <label>Handicap (HCP)</label>
+          <input type="number" id="spHcp" placeholder="18.0" step="0.1" min="-10" max="54">
+        </div>
+        <div>
+          <label>Geschlecht</label>
+          <select id="spGender">
+            <option value="m">Herr</option>
+            <option value="f">Dame</option>
+          </select>
+        </div>
+      </div>
+      <label>Abschlag</label>
+      <select id="spTee">
+        ${tees.map(t => `<option>${t}</option>`).join('')}
+      </select>
+      <button class="btn btn-primary btn-full" onclick="addPlayer()">➕ Spieler hinzufügen</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👥 Spielerliste <span id="playerCount" class="badge badge-blue">0</span></div>
+      <div id="playerList"><div class="loading"><div class="loading-spinner"></div></div></div>
+    </div>
+  `;
+  loadPlayerList();
+}
+
+async function loadPlayerList() {
+  if (!state.tournamentCode) return;
+  await loadFirebase();
+  const snap = await db.ref('tournaments/' + state.tournamentCode + '/players').once('value');
+  const players = snap.val() || {};
+  const list = document.getElementById('playerList');
+  const entries = Object.entries(players);
+  document.getElementById('playerCount').textContent = entries.length;
+
+  if (!entries.length) {
+    list.innerHTML = '<p class="text-muted text-center">Noch keine Spieler</p>';
+    return;
+  }
+
+  const teeColors = {gelb:'tee-yellow',weiß:'tee-white',rot:'tee-red',blau:'tee-blue',schwarz:'tee-black',gold:'tee-gold'};
+
+  list.innerHTML = entries.map(([id, p]) => {
+    const teeKey = (p.tee || '').toLowerCase();
+    const teeClass = teeColors[teeKey] || 'tee-white';
+    return `
+      <div class="player-admin-row">
+        <div class="pname">${p.gender==='f'?'👩':'👨'} ${p.name}</div>
+        <div class="phcp">HCP ${p.hcp}</div>
+        <div><span class="tee-dot ${teeClass}"></span>${p.tee}</div>
+        <button class="btn btn-danger btn-sm" onclick="removePlayer('${id}')">✕</button>
+      </div>
+    `;
+  }).join('');
+}
+
+async function addPlayer() {
+  const name = document.getElementById('spName').value.trim();
+  const hcp = parseFloat(document.getElementById('spHcp').value);
+  const gender = document.getElementById('spGender').value;
+  const tee = document.getElementById('spTee').value;
+
+  if (!name || isNaN(hcp)) { toast('❌ Name und HCP erforderlich'); return; }
+
+  const id = 'p' + Date.now();
+  await db.ref('tournaments/' + state.tournamentCode + '/players/' + id).set({
+    name, hcp, gender, tee,
+    addedAt: Date.now()
+  });
+
+  document.getElementById('spName').value = '';
+  document.getElementById('spHcp').value = '';
+  toast('✅ ' + name + ' hinzugefügt');
+  loadPlayerList();
+}
+
+async function removePlayer(id) {
+  if (!confirm('Spieler entfernen?')) return;
+  await db.ref('tournaments/' + state.tournamentCode + '/players/' + id).remove();
+  loadPlayerList();
+}
+
+// ====================================================
+// ADMIN — FLIGHTS
+// ====================================================
+async function renderAdminFlights(c) {
+  if (!state.tournamentCode) {
+    c.innerHTML = '<div class="card"><p class="text-muted text-center">Bitte erst ein Turnier laden</p></div>';
+    return;
+  }
+
+  await loadFirebase();
+  const snap = await db.ref('tournaments/' + state.tournamentCode).once('value');
+  const tData = snap.val() || {};
+  const players = tData.players || {};
+  const flights = tData.flights || {};
+
+  // Get assigned player IDs
+  const assignedIds = new Set();
+  Object.values(flights).forEach(f => {
+    (f.players || []).forEach(pid => assignedIds.add(pid));
+  });
+  const unassigned = Object.entries(players).filter(([id]) => !assignedIds.has(id));
+
+  const playerEntries = Object.entries(players);
+
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-title">✈️ Flight-Zuweisung</div>
+      
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <button class="btn btn-secondary btn-sm" onclick="autoFlightsHcp()">🤖 Auto nach HCP</button>
+        <button class="btn btn-secondary btn-sm" onclick="autoFlightsMixed()">🔀 Gemischt (H+M+N)</button>
+        <button class="btn btn-secondary btn-sm" onclick="clearAllFlights()">🗑️ Alle löschen</button>
+        <button class="btn btn-primary btn-sm" onclick="addFlightSlot()">➕ Flight</button>
+      </div>
+
+      <div class="info-box">
+        <strong>Nicht zugewiesen (${unassigned.length}):</strong><br>
+        <div class="unassigned-pool" id="unassignedPool">
+          ${unassigned.map(([id,p]) => `
+            <span class="player-chip ${p.gender==='f'?'female':''}" 
+                  onclick="openAssignModal('${id}','${escHtml(p.name)}')"
+                  title="HCP ${p.hcp} · ${p.tee}">
+              ${p.name.split(' ')[0]} (${p.hcp})
+            </span>
+          `).join('')}
+        </div>
+      </div>
+
+      <div id="flightSlots">
+        ${Object.entries(flights).map(([fid, f]) => renderFlightSlotHtml(fid, f, players)).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderFlightSlotHtml(fid, f, players) {
+  const fPlayers = (f.players || []).map(pid => players[pid] ? {id: pid, ...players[pid]} : null).filter(Boolean);
+  return `
+    <div class="flight-slot" id="fs_${fid}">
+      <div class="flight-slot-header">
+        <strong>Flight ${f.num || fid}</strong>
+        <div style="display:flex;gap:6px;">
+          <input type="time" value="${f.teeTime||''}" style="width:90px;padding:4px;font-size:12px;margin:0;" 
+                 onchange="setFlightTeeTime('${fid}',this.value)" placeholder="Startzeit">
+          <button class="btn btn-danger btn-sm" onclick="deleteFlight('${fid}')">✕</button>
+        </div>
+      </div>
+      <div class="flight-drop-zone" id="fdz_${fid}">
+        ${fPlayers.map(p => `
+          <span class="player-chip ${p.gender==='f'?'female':''}" 
+                onclick="removeFromFlight('${fid}','${p.id}')"
+                title="Zum Entfernen klicken">
+            ${p.name.split(' ')[0]} (${p.hcp}) ✕
+          </span>
+        `).join('')}
+      </div>
+      <div style="margin-top:6px;">
+        <button class="btn btn-outline btn-sm" onclick="openAddToFlightModal('${fid}')">+ Spieler</button>
+      </div>
+    </div>
+  `;
+}
+
+function escHtml(s) { return s.replace(/'/g, "\\'"); }
+
+async function addFlightSlot() {
+  if (!state.tournamentCode) return;
+  const snap = await db.ref('tournaments/' + state.tournamentCode + '/flights').once('value');
+  const flights = snap.val() || {};
+  const num = Object.keys(flights).length + 1;
+  const fid = 'f' + Date.now();
+  await db.ref('tournaments/' + state.tournamentCode + '/flights/' + fid).set({
+    num, players: [], teeTime: ''
+  });
+  renderAdminFlights(document.getElementById('adminContent'));
+}
+
+async function deleteFlight(fid) {
+  if (!confirm('Flight löschen?')) return;
+  await db.ref('tournaments/' + state.tournamentCode + '/flights/' + fid).remove();
+  renderAdminFlights(document.getElementById('adminContent'));
+}
+
+async function setFlightTeeTime(fid, time) {
+  await db.ref('tournaments/' + state.tournamentCode + '/flights/' + fid + '/teeTime').set(time);
+}
+
+function openAssignModal(pid, pname) {
+  // Show modal to pick a flight
+  loadFirebase().then(async () => {
+    const snap = await db.ref('tournaments/' + state.tournamentCode + '/flights').once('value');
+    const flights = snap.val() || {};
+    const opts = Object.entries(flights).map(([fid, f]) => 
+      `<option value="${fid}">Flight ${f.num || fid}${f.teeTime?' ('+f.teeTime+')':''}</option>`
+    ).join('');
+    openModal(`${pname} zuweisen`, `
+      <label>Flight auswählen</label>
+      <select id="assignFlightSel">${opts}</select>
+    `, `
+      <button class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
+      <button class="btn btn-primary" onclick="assignToFlight('${pid}')">Zuweisen</button>
+    `);
+  });
+}
+
+async function assignToFlight(pid) {
+  const fid = document.getElementById('assignFlightSel').value;
+  const snap = await db.ref('tournaments/' + state.tournamentCode + '/flights/' + fid + '/players').once('value');
+  const current = snap.val() || [];
+  if (!current.includes(pid)) {
+    await db.ref('tournaments/' + state.tournamentCode + '/flights/' + fid + '/players').set([...current, pid]);
+  }
+  closeModal();
+  renderAdminFlights(document.getElementById('adminContent'));
+}
+
+function openAddToFlightModal(fid) {
+  loadFirebase().then(async () => {
+    const snap = await db.ref('tournaments/' + state.tournamentCode).once('value');
+    const tData = snap.val() || {};
+    const players = tData.players || {};
+    const flights = tData.flights || {};
+
+    // Find unassigned
+    const assignedIds = new Set();
+    Object.entries(flights).forEach(([fid2, f]) => {
+      if (fid2 !== fid) (f.players || []).forEach(pid => assignedIds.add(pid));
+    });
+    const currentFlight = flights[fid] || {};
+    (currentFlight.players || []).forEach(pid => assignedIds.add(pid));
+    const available = Object.entries(players).filter(([id]) => !assignedIds.has(id));
+
+    if (!available.length) { toast('Alle Spieler bereits zugewiesen'); return; }
+
+    openModal('Spieler zu Flight hinzufügen', `
+      <label>Spieler auswählen</label>
+      <select id="addToFlightSel">
+        ${available.map(([id,p]) => `<option value="${id}">${p.name} (HCP ${p.hcp})</option>`).join('')}
+      </select>
+    `, `
+      <button class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
+      <button class="btn btn-primary" onclick="doAddToFlight('${fid}')">Hinzufügen</button>
+    `);
+  });
+}
+
+async function doAddToFlight(fid) {
+  const pid = document.getElementById('addToFlightSel').value;
+  const snap = await db.ref('tournaments/' + state.tournamentCode + '/flights/' + fid + '/players').once('value');
+  const current = snap.val() || [];
+  if (!current.includes(pid)) {
+    await db.ref('tournaments/' + state.tournamentCode + '/flights/' + fid + '/players').set([...current, pid]);
+  }
+  closeModal();
+  renderAdminFlights(document.getElementById('adminContent'));
+}
+
+async function removeFromFlight(fid, pid) {
+  const snap = await db.ref('tournaments/' + state.tournamentCode + '/flights/' + fid + '/players').once('value');
+  const current = snap.val() || [];
+  await db.ref('tournaments/' + state.tournamentCode + '/flights/' + fid + '/players').set(current.filter(p => p !== pid));
+  renderAdminFlights(document.getElementById('adminContent'));
+}
+
+async function autoFlightsHcp() {
+  if (!confirm('Alle Flights nach HCP automatisch aufteilen? Bestehende Flights werden gelöscht.')) return;
+  await loadFirebase();
+  const snap = await db.ref('tournaments/' + state.tournamentCode + '/players').once('value');
+  const players = snap.val() || {};
+  const sorted = Object.entries(players).sort(([,a],[,b]) => a.hcp - b.hcp);
+  await db.ref('tournaments/' + state.tournamentCode + '/flights').remove();
+
+  const flightSize = 4;
+  const flightData = {};
+  for (let i=0; i<sorted.length; i+=flightSize) {
+    const fid = 'f' + (i/flightSize + 1);
+    flightData[fid] = {
+      num: i/flightSize + 1,
+      players: sorted.slice(i, i+flightSize).map(([id]) => id),
+      teeTime: ''
+    };
+  }
+  await db.ref('tournaments/' + state.tournamentCode + '/flights').set(flightData);
+  toast('✅ Flights nach HCP aufgeteilt');
+  renderAdminFlights(document.getElementById('adminContent'));
+}
+
+async function autoFlightsMixed() {
+  if (!confirm('Gemischte Flights (Hoch/Mittel/Niedrig HCP) erstellen? Bestehende Flights werden gelöscht.')) return;
+  await loadFirebase();
+  const snap = await db.ref('tournaments/' + state.tournamentCode + '/players').once('value');
+  const players = snap.val() || {};
+  const sorted = Object.entries(players).sort(([,a],[,b]) => b.hcp - a.hcp); // high to low
+
+  await db.ref('tournaments/' + state.tournamentCode + '/flights').remove();
+
+  // Distribute: high, low, mid rotation
+  const n = sorted.length;
+  const numFlights = Math.ceil(n / 4);
+  const groups = Array.from({length: numFlights}, () => []);
+  sorted.forEach((p, i) => {
+    const fi = i % numFlights;
+    groups[fi].push(p[0]);
+  });
+
+  const flightData = {};
+  groups.forEach((g, i) => {
+    const fid = 'f' + (i+1);
+    flightData[fid] = { num: i+1, players: g, teeTime: '' };
+  });
+  await db.ref('tournaments/' + state.tournamentCode + '/flights').set(flightData);
+  toast('✅ Gemischte Flights erstellt');
+  renderAdminFlights(document.getElementById('adminContent'));
+}
+
+async function clearAllFlights() {
+  if (!confirm('Alle Flights löschen?')) return;
+  await db.ref('tournaments/' + state.tournamentCode + '/flights').remove();
+  renderAdminFlights(document.getElementById('adminContent'));
+}
+
+// ====================================================
+// ADMIN — PLATZ
+// ====================================================
+async function renderAdminPlatz(c) {
+  await loadCourses();
+
+  const teeOptions = ['Gelb','Weiß','Rot','Blau','Schwarz','Gold'];
+
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-title">⛳ Platzdaten</div>
+      
+      <label>Gespeicherten Platz laden</label>
+      <select id="courseSelect" onchange="loadCourseData()">
+        <option value="">-- Platz auswählen --</option>
+        ${savedCourses.map((c,i) => `<option value="${i}">${c.name}</option>`).join('')}
+      </select>
+
+      <div class="divider"></div>
+
+      <label>Platzname</label>
+      <input type="text" id="cName" placeholder="z.B. GC Schloss Elkofen">
+      
+      <div class="card-title" style="margin-top:12px;">Par & Stroke Index pro Loch</div>
+      <div id="holeInputs" style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr>
+              <th style="padding:4px;background:var(--primary);color:white;">Loch</th>
+              ${Array.from({length:18},(_,i)=>`<th style="padding:4px;background:var(--primary);color:white;min-width:36px;">${i+1}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding:4px;font-weight:700;">Par</td>
+              ${Array.from({length:18},(_,i)=>`<td><input type="number" id="par${i+1}" min="3" max="5" value="4" style="width:36px;padding:3px;text-align:center;margin:0;font-size:12px;"></td>`).join('')}
+            </tr>
+            <tr>
+              <td style="padding:4px;font-weight:700;">SI</td>
+              ${Array.from({length:18},(_,i)=>`<td><input type="number" id="si${i+1}" min="1" max="18" value="${i+1}" style="width:36px;padding:3px;text-align:center;margin:0;font-size:12px;"></td>`).join('')}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="divider"></div>
+      <div class="card-title">🎯 CR / Slope pro Abschlag</div>
+      <div id="teeValues">
+        ${teeOptions.map(t => `
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div style="min-width:70px;font-weight:600;font-size:13px;">${t}</div>
+            <div style="flex:1;">
+              <input type="number" id="cr_${t}" placeholder="CR (z.B. 71.2)" step="0.1" style="margin:0;">
+            </div>
+            <div style="flex:1;">
+              <input type="number" id="slope_${t}" placeholder="Slope (z.B. 125)" style="margin:0;">
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="text-muted" style="font-size:12px;margin-bottom:10px;">Nur benötigte Abschläge ausfüllen</div>
+
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" style="flex:1;" onclick="saveCourseToTournament()">💾 Zum Turnier speichern</button>
+        <button class="btn btn-secondary" style="flex:1;" onclick="saveCourseToSupabase()">☁️ In Bibliothek speichern</button>
+      </div>
+    </div>
+  `;
+}
+
+function loadCourseData() {
+  const idx = document.getElementById('courseSelect').value;
+  if (idx === '') return;
+  const course = savedCourses[idx];
+  if (!course) return;
+  document.getElementById('cName').value = course.name || '';
+  const par = course.par || [];
+  const si = course.stroke_index || course.si || [];
+  for (let i=1; i<=18; i++) {
+    const pEl = document.getElementById('par'+i);
+    const sEl = document.getElementById('si'+i);
+    if (pEl && par[i-1]) pEl.value = par[i-1];
+    if (sEl && si[i-1]) sEl.value = si[i-1];
+  }
+  toast('✅ ' + course.name + ' geladen');
+}
+
+async function saveCourseToTournament() {
+  if (!state.tournamentCode) { toast('❌ Kein Turnier aktiv'); return; }
+  const name = document.getElementById('cName').value.trim();
+  if (!name) { toast('❌ Platzname erforderlich'); return; }
+
+  const par = [], si = [];
+  for (let i=1; i<=18; i++) {
+    par.push(parseInt(document.getElementById('par'+i).value) || 4);
+    si.push(parseInt(document.getElementById('si'+i).value) || i);
+  }
+
+  const tees = {};
+  ['Gelb','Weiß','Rot','Blau','Schwarz','Gold'].forEach(t => {
+    const cr = parseFloat(document.getElementById('cr_'+t).value);
+    const slope = parseFloat(document.getElementById('slope_'+t).value);
+    if (!isNaN(cr) && !isNaN(slope)) tees[t] = { cr, slope };
+  });
+
+  await loadFirebase();
+  await db.ref('tournaments/' + state.tournamentCode + '/course').set({ name, par, si, tees });
+  toast('✅ Platz gespeichert!');
+}
+
+async function saveCourseToSupabase() {
+  const name = document.getElementById('cName').value.trim();
+  if (!name) { toast('❌ Platzname erforderlich'); return; }
+  const par = [], si = [];
+  for (let i=1; i<=18; i++) {
+    par.push(parseInt(document.getElementById('par'+i).value) || 4);
+    si.push(parseInt(document.getElementById('si'+i).value) || i);
+  }
+  try {
+    await sbFetch('courses', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ name, par, stroke_index: si })
+    });
+    toast('✅ In Bibliothek gespeichert!');
+    await loadCourses();
+  } catch(e) {
+    toast('❌ Speichern fehlgeschlagen: ' + e.message);
+  }
+}
+
+// ====================================================
+// ADMIN — ERGEBNIS
+// ====================================================
+async function renderAdminErgebnis(c) {
+  if (!state.tournamentCode) {
+    c.innerHTML = '<div class="card"><p class="text-muted text-center">Kein Turnier aktiv</p></div>';
+    return;
+  }
+  c.innerHTML = '<div class="loading"><div class="loading-spinner"></div><br>Lade Ergebnisse...</div>';
+
+  await loadFirebase();
+  const snap = await db.ref('tournaments/' + state.tournamentCode).once('value');
+  const tData = snap.val() || {};
+
+  const players = tData.players || {};
+  const scores = tData.scores || {};
+  const course = tData.course || {};
+  const par = course.par || Array(18).fill(4);
+  const format = tData.format || 'Stableford';
+  const rounds = tData.rounds || 1;
+
+  // Calculate results
+  const results = Object.entries(players).map(([pid, p]) => {
+    let totalPoints = 0;
+    let totalGross = 0;
+    for (let r=1; r<=rounds; r++) {
+      const rScores = (scores[r] || {})[pid] || {};
+      const vorgabe = calcVorgabe(p.hcp, course.tees || {}, p.tee);
+      for (let h=1; h<=18; h++) {
+        const sc = rScores[h];
+        if (!sc) continue;
+        totalGross += sc;
+        if (format === 'Stableford') {
+          totalPoints += calcStableford(sc, par[h-1] || 4, h, vorgabe, course.si || []);
+        }
+      }
+    }
+    return { pid, name: p.name, hcp: p.hcp, tee: p.tee, gender: p.gender, totalPoints, totalGross };
+  });
+
+  const isStableford = format === 'Stableford';
+  results.sort((a,b) => isStableford ? b.totalPoints - a.totalPoints : a.totalGross - b.totalGross);
+
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-title">📋 Ergebnistabelle — ${tData.name || state.tournamentCode}</div>
+      <div class="badge ${isStableford?'badge-green':'badge-blue'}" style="margin-bottom:12px;">${format}</div>
+      <table class="final-table">
+        <thead>
+          <tr>
+            <th>Pl.</th>
+            <th style="text-align:left;">Spieler</th>
+            <th>HCP</th>
+            <th>${isStableford ? 'Punkte' : 'Brutto'}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${results.map((r, i) => `
+            <tr class="${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">
+              <td><strong>${i+1}.</strong></td>
+              <td style="text-align:left;">${r.gender==='f'?'👩':'👨'} ${r.name}</td>
+              <td>${r.hcp}</td>
+              <td><strong>${isStableford ? r.totalPoints + ' Pkt' : r.totalGross}</strong></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <button class="btn btn-primary btn-full mt-8" onclick="showLeaderboardAdmin()">📊 Live-Leaderboard</button>
+    </div>
+  `;
+}
+
+function showLeaderboardAdmin() {
+  buildLeaderboard();
+  showScreen('screenLeaderboard');
+}
+
+// ====================================================
+// HANDICAP / VORGABE
+// ====================================================
+function calcVorgabe(hcp, tees, teeName) {
+  // Spielvorgabe = HCP * (Slope/113) + (CR - Par)
+  const teeData = (tees || {})[teeName];
+  if (teeData && teeData.cr && teeData.slope) {
+    const totalPar = 72; // default
+    return Math.round(hcp * (teeData.slope / 113) + (teeData.cr - totalPar));
+  }
+  return Math.round(hcp);
+}
+
+function calcStableford(score, par, hole, vorgabe, siArr) {
+  const si = siArr[hole-1] || hole;
+  const shots = vorgabe > 0 ? (si <= vorgabe ? 1 : 0) + (si <= (vorgabe - 18) ? 1 : 0) : 
+                              (si <= (-vorgabe) ? -1 : 0);
+  const netScore = score - shots;
+  const diff = par - netScore;
+  if (diff >= 2) return diff + 1; // Eagle+
+  if (diff === 1) return 2; // Birdie
+  if (diff === 0) return 1; // Par
+  if (diff === -1) return 0; // Bogey (no points)
+  return 0;
+}
+
+// ====================================================
+// JOIN TOURNAMENT
+// ====================================================
+async function joinTournament() {
+  const code = document.getElementById('joinCode').value.trim().toUpperCase();
+  const name = document.getElementById('joinName').value.trim();
+
+  if (!code || code.length !== 3) { toast('❌ 3-stelligen Code eingeben'); return; }
+  if (!name) { toast('❌ Namen eingeben'); return; }
+
+  await loadFirebase();
+  const snap = await db.ref('tournaments/' + code).once('value');
+  const tData = snap.val();
+  if (!tData) { toast('❌ Turnier nicht gefunden'); return; }
+
+  // Find player by name
+  const players = tData.players || {};
+  let foundId = null;
+  Object.entries(players).forEach(([id, p]) => {
+    if (p.name.toLowerCase() === name.toLowerCase()) foundId = id;
+  });
+
+  if (!foundId) {
+    toast('❌ Spieler nicht in der Teilnehmerliste gefunden');
+    return;
+  }
+
+  state.tournamentCode = code;
+  state.tournamentData = tData;
+  state.playerName = name;
+  state.playerId = foundId;
+  state.currentHole = 1;
+  state.currentRound = 1;
+
+  document.getElementById('headerTitle').textContent = '⛳ ' + (tData.name || code);
+  document.getElementById('headerSub').textContent = code + ' · ' + name;
+  document.getElementById('bottomNav').style.display = 'flex';
+
+  // Load my flight
+  await loadPlayerFlight();
+  showScreen('screenPlayer');
+  setupScoreListeners();
+}
+
+// ====================================================
+// PLAYER FLIGHT
+// ====================================================
+async function loadPlayerFlight() {
+  const snap = await db.ref('tournaments/' + state.tournamentCode).once('value');
+  const tData = snap.val() || {};
+  const flights = tData.flights || {};
+  const players = tData.players || {};
+
+  let myFlight = null;
+  let myFlightId = null;
+  Object.entries(flights).forEach(([fid, f]) => {
+    if ((f.players || []).includes(state.playerId)) {
+      myFlight = f;
+      myFlightId = fid;
+    }
+  });
+
+  state.myFlight = myFlight;
+  state.myFlightId = myFlightId;
+  state.allPlayers = players;
+  state.tournamentData = tData;
+
+  renderPlayerScreen();
+}
+
+function renderPlayerScreen() {
+  const tData = state.tournamentData || {};
+  const course = tData.course || {};
+  const par = course.par || Array(18).fill(4);
+  const si = course.si || Array.from({length:18},(_,i)=>i+1);
+  const players = state.allPlayers || {};
+  const myFlight = state.myFlight;
+  const format = tData.format || 'Stableford';
+
+  // Flight info
+  const fc = document.getElementById('flightInfoContent');
+  if (myFlight) {
+    const flightPlayers = (myFlight.players || []).map(pid => players[pid]).filter(Boolean);
+    fc.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <strong>Flight ${myFlight.num || '?'}</strong>
+        ${myFlight.teeTime ? `<span class="badge badge-blue">🕐 ${myFlight.teeTime}</span>` : ''}
+        <span class="badge badge-green">${format}</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${flightPlayers.map(p => `
+          <span style="background:${p.gender==='f'?'#d63384':'var(--primary)'};color:white;padding:4px 10px;border-radius:12px;font-size:13px;font-weight:600;">
+            ${p.name.split(' ')[0]} (${p.hcp})
+          </span>
+        `).join('')}
+      </div>
+    `;
+  } else {
+    fc.innerHTML = '<p class="text-muted">Noch keinem Flight zugewiesen — bitte Admin kontaktieren</p>';
+  }
+
+  // Hole display
+  const h = state.currentHole;
+  document.getElementById('holeNum').textContent = 'Loch ' + h;
+  document.getElementById('holeInfo').textContent = 'Par ' + (par[h-1]||4) + ' · SI ' + (si[h-1]||h);
+
+  // Score entries for flight members (Zähler ↔ Spieler)
+  renderScoreEntries(h, par, si, players);
+
+  // Hole dots
+  renderHoleDots(par);
+
+  // My overview
+  renderMyOverview(par, si, players);
+}
+
+function renderScoreEntries(hole, par, si, players) {
+  const container = document.getElementById('scoreEntries');
+  const myFlight = state.myFlight;
+  if (!myFlight) { container.innerHTML = ''; return; }
+
+  const round = state.currentRound;
+  const scores = state.scores[round] || {};
+  const flightPlayerIds = myFlight.players || [];
+
+  container.innerHTML = flightPlayerIds.map(pid => {
+    const p = players[pid];
+    if (!p) return '';
+    const sc = (scores[pid] || {})[hole] || 0;
+    const isMe = pid === state.playerId;
+    const teeColors = {gelb:'#f1c40f',weiß:'#bdc3c7',rot:'#e74c3c',blau:'#3498db',schwarz:'#2c3e50',gold:'#d4a017'};
+    const teeColor = teeColors[(p.tee||'').toLowerCase()] || '#ccc';
+
+    return `
+      <div style="padding:10px;border-radius:8px;margin-bottom:8px;background:${isMe?'#e8f5e9':'#f8f9fa'};border:${isMe?'2px solid var(--primary)':'1px solid var(--border)'};">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div>
+            <span style="font-weight:700;">${isMe?'👤 ':''}${p.name}</span>
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${teeColor};margin-left:6px;vertical-align:middle;"></span>
+          </div>
+          <span class="text-muted" style="font-size:12px;">HCP ${p.hcp}</span>
+        </div>
+        <div class="stepper">
+          <button class="stepper-btn" onclick="changeScore('${pid}',${hole},-1)">−</button>
+          <span class="stepper-val" id="sv_${pid}_${hole}">${sc || '–'}</span>
+          <button class="stepper-btn" onclick="changeScore('${pid}',${hole},1)">+</button>
+          ${sc ? `<span class="${getScoreClass(sc, par[hole-1]||4)}" style="margin-left:6px;">${getScoreLabel(sc, par[hole-1]||4)}</span>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function getScoreClass(score, par) {
+  const diff = score - par;
+  if (diff <= -2) return 'score-relative eagle';
+  if (diff === -1) return 'score-relative birdie';
+  if (diff === 0) return 'score-relative par-score';
+  if (diff === 1) return 'score-relative bogey';
+  if (diff === 2) return 'score-relative double';
+  return 'score-relative triple';
+}
+
+function getScoreLabel(score, par) {
+  const diff = score - par;
+  if (diff <= -2) return diff <= -2 ? (diff<=-2?'Eagle':'Albatros') : 'Eagle';
+  if (diff === -1) return 'Birdie';
+  if (diff === 0) return 'Par';
+  if (diff === 1) return 'Bogey';
+  if (diff === 2) return '+2';
+  return '+' + diff;
+}
+
+async function changeScore(pid, hole, delta) {
+  if (!state.tournamentCode) return;
+  const round = state.currentRound;
+  if (!state.scores[round]) state.scores[round] = {};
+  if (!state.scores[round][pid]) state.scores[round][pid] = {};
+
+  const current = state.scores[round][pid][hole] || 0;
+  const newVal = Math.max(1, Math.min(15, current + delta));
+  state.scores[round][pid][hole] = newVal;
+
+  // Update display immediately
+  const el = document.getElementById('sv_' + pid + '_' + hole);
+  if (el) el.textContent = newVal;
+
+  // Save to Firebase
+  await loadFirebase();
+  await db.ref(`tournaments/${state.tournamentCode}/scores/${round}/${pid}/${hole}`).set(newVal);
+
+  // Re-render for score class update
+  const tData = state.tournamentData || {};
+  const course = tData.course || {};
+  renderScoreEntries(hole, course.par || Array(18).fill(4), course.si || Array.from({length:18},(_,i)=>i+1), state.allPlayers || {});
+  renderMyOverview(course.par || Array(18).fill(4), course.si || Array.from({length:18},(_,i)=>i+1), state.allPlayers || {});
+  updateHoleDot(hole);
+}
+
+function renderHoleDots(par) {
+  const container = document.getElementById('holeDots');
+  const round = state.currentRound;
+  const myScores = (state.scores[round] || {})[state.playerId] || {};
+
+  container.innerHTML = Array.from({length:18},(_,i)=>{
+    const h = i+1;
+    const filled = !!myScores[h];
+    const isCurrent = h === state.currentHole;
+    return `<div class="hole-dot ${filled?'filled':'empty'} ${isCurrent?'current':''}" onclick="goToHole(${h})">${h}</div>`;
+  }).join('');
+}
+
+function updateHoleDot(hole) {
+  const round = state.currentRound;
+  const myScores = (state.scores[round] || {})[state.playerId] || {};
+  const filled = !!myScores[hole];
+  const dots = document.querySelectorAll('.hole-dot');
+  if (dots[hole-1]) {
+    dots[hole-1].className = `hole-dot ${filled?'filled':'empty'} ${hole===state.currentHole?'current':''}`;
+  }
+}
+
+function renderMyOverview(par, si, players) {
+  const round = state.currentRound;
+  const myScores = (state.scores[round] || {})[state.playerId] || {};
+  const me = players[state.playerId] || {};
+  const tData = state.tournamentData || {};
+  const vorgabe = calcVorgabe(me.hcp || 0, (tData.course || {}).tees || {}, me.tee || '');
+
+  let gross = 0, net = 0, stab = 0, holes = 0;
+  for (let h=1; h<=18; h++) {
+    const sc = myScores[h];
+    if (!sc) continue;
+    holes++;
+    gross += sc;
+    const pts = calcStableford(sc, par[h-1]||4, h, vorgabe, si);
+    stab += pts;
+    net += sc;
+  }
+
+  const totalPar = par.reduce((a,b)=>a+b, 0);
+  const playedPar = par.slice(0, holes > 0 ? Math.max(...Object.keys(myScores).map(Number)) : 0).reduce((a,b)=>a+b,0);
+
+  document.getElementById('myScoreOverview').innerHTML = `
+    <div class="input-row-3">
+      <div style="text-align:center;padding:10px;background:var(--accent);border-radius:8px;">
+        <div style="font-size:11px;color:var(--text-muted);font-weight:600;">GESPIELT</div>
+        <div style="font-size:22px;font-weight:800;color:var(--primary);">${holes}</div>
+        <div style="font-size:11px;color:var(--text-muted);">Löcher</div>
+      </div>
+      <div style="text-align:center;padding:10px;background:var(--accent);border-radius:8px;">
+        <div style="font-size:11px;color:var(--text-muted);font-weight:600;">BRUTTO</div>
+        <div style="font-size:22px;font-weight:800;color:var(--primary);">${gross || '–'}</div>
+        <div style="font-size:11px;color:var(--text-muted);">${gross ? (gross-playedPar>0?'+':'')+(gross-playedPar) : ''}</div>
+      </div>
+      <div style="text-align:center;padding:10px;background:var(--accent);border-radius:8px;">
+        <div style="font-size:11px;color:var(--text-muted);font-weight:600;">STABLEFORD</div>
+        <div style="font-size:22px;font-weight:800;color:var(--primary);">${stab}</div>
+        <div style="font-size:11px;color:var(--text-muted);">Punkte</div>
+      </div>
+    </div>
+    <div class="text-muted" style="font-size:12px;margin-top:8px;text-align:center;">Vorgabe: ${vorgabe} · Runde ${round}</div>
+  `;
+}
+
+function prevHole() {
+  if (state.currentHole > 1) {
+    state.currentHole--;
+    renderPlayerScreen();
+  }
+}
+
+function nextHole() {
+  if (state.currentHole < 18) {
+    state.currentHole++;
+    renderPlayerScreen();
+  }
+}
+
+function goToHole(h) {
+  state.currentHole = h;
+  renderPlayerScreen();
+}
+
+// ====================================================
+// LIVE LISTENERS
+// ====================================================
+function setupScoreListeners() {
+  if (!state.tournamentCode) return;
+  const rounds = (state.tournamentData || {}).rounds || 1;
+  for (let r=1; r<=rounds; r++) {
+    const ref = db.ref(`tournaments/${state.tournamentCode}/scores/${r}`);
+    ref.on('value', snap => {
+      if (!state.scores[r]) state.scores[r] = {};
+      state.scores[r] = snap.val() || {};
+      if (document.getElementById('screenPlayer').classList.contains('active')) {
+        const tData = state.tournamentData || {};
+        const course = tData.course || {};
+        renderScoreEntries(state.currentHole, course.par || Array(18).fill(4), course.si || Array.from({length:18},(_,i)=>i+1), state.allPlayers || {});
+        renderMyOverview(course.par || Array(18).fill(4), course.si || Array.from({length:18},(_,i)=>i+1), state.allPlayers || {});
+        renderHoleDots(course.par || Array(18).fill(4));
+      }
+    });
+  }
+}
+
+// ====================================================
+// LEADERBOARD
+// ====================================================
+async function showLeaderboard() {
+  await buildLeaderboard();
+  showScreen('screenLeaderboard');
+}
+
+async function buildLeaderboard() {
+  if (!state.tournamentCode) return;
+  await loadFirebase();
+  const snap = await db.ref('tournaments/' + state.tournamentCode).once('value');
+  const tData = snap.val() || {};
+
+  state.tournamentData = tData;
+  const players = tData.players || {};
+  const scores = tData.scores || {};
+  const course = tData.course || {};
+  const par = course.par || Array(18).fill(4);
+  const si = course.si || Array.from({length:18},(_,i)=>i+1);
+  const format = tData.format || 'Stableford';
+  const rounds = tData.rounds || 1;
+
+  // Round tabs
+  const rtabs = document.getElementById('lbRoundTabs');
+  if (rounds > 1) {
+    rtabs.innerHTML = Array.from({length:rounds},(_,i)=>`
+      <div class="round-tab ${state.currentRound===i+1?'active':''}" onclick="setLBRound(${i+1})">Runde ${i+1}</div>
+    `).join('') + `<div class="round-tab ${state.currentRound===0?'active':''}" onclick="setLBRound(0)">Gesamt</div>`;
+  } else {
+    rtabs.innerHTML = '';
+  }
+
+  // Format tabs
+  const ftabs = document.getElementById('lbFormatTabs');
+  const showFormats = ['Stableford','Brutto','Netto'];
+  ftabs.innerHTML = showFormats.map(f => `
+    <button class="tab ${(window._lbFormat||'Stableford')===f?'active':''}" onclick="setLBFormat('${f}')">${f}</button>
+  `).join('');
+
+  renderLeaderboard(players, scores, par, si, format, rounds, course);
+}
+
+function setLBRound(r) {
+  state.currentRound = r || 1;
+  buildLeaderboard();
+}
+
+function setLBFormat(f) {
+  window._lbFormat = f;
+  buildLeaderboard();
+}
+
+function renderLeaderboard(players, scores, par, si, format, rounds, course) {
+  const lbFormat = window._lbFormat || 'Stableford';
+  const isStableford = lbFormat === 'Stableford';
+  const isNetto = lbFormat === 'Netto';
+
+  const roundNums = state.currentRound === 0 ? Array.from({length:rounds},(_,i)=>i+1) : [state.currentRound];
+
+  const results = Object.entries(players).map(([pid, p]) => {
+    const vorgabe = calcVorgabe(p.hcp || 0, course.tees || {}, p.tee || '');
+    let totalPoints = 0, totalGross = 0, totalNet = 0, holesPlayed = 0;
+
+    roundNums.forEach(r => {
+      const rScores = (scores[r] || {})[pid] || {};
+      for (let h=1; h<=18; h++) {
+        const sc = rScores[h];
+        if (!sc) continue;
+        holesPlayed++;
+        totalGross += sc;
+        const shots = calcShots(h, vorgabe, si);
+        totalNet += sc - shots;
+        totalPoints += calcStableford(sc, par[h-1]||4, h, vorgabe, si);
+      }
+    });
+
+    return { pid, name: p.name, hcp: p.hcp, gender: p.gender, tee: p.tee, totalPoints, totalGross, totalNet, holesPlayed };
+  });
+
+  results.sort((a,b) => {
+    if (isStableford) return b.totalPoints - a.totalPoints;
+    if (isNetto) return a.totalNet - b.totalNet;
+    return a.totalGross - b.totalGross;
+  });
+
+  const c = document.getElementById('leaderboardContent');
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-title">📊 ${lbFormat}-Rangliste <span class="text-muted" style="font-size:11px;">(live)</span></div>
+      ${results.map((r, i) => {
+        const scoreVal = isStableford ? r.totalPoints + ' Pkt' : isNetto ? r.totalNet : r.totalGross;
+        const posClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+        const teeColors = {gelb:'#f1c40f',weiß:'#bdc3c7',rot:'#e74c3c',blau:'#3498db',schwarz:'#2c3e50',gold:'#d4a017'};
+        const teeColor = teeColors[(r.tee||'').toLowerCase()] || '#ccc';
+        return `
+          <div class="lb-row" style="${r.pid===state.playerId?'border:2px solid var(--primary);':''}" >
+            <div class="lb-pos ${posClass}">${i+1}</div>
+            <div style="flex:1;">
+              <div class="lb-name">${r.gender==='f'?'👩':'👨'} ${r.name}</div>
+              <div class="lb-detail">
+                HCP ${r.hcp} · 
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${teeColor};vertical-align:middle;"></span>
+                ${r.tee || ''} · ${r.holesPlayed} Loch
+              </div>
+            </div>
+            <div class="lb-score">${scoreVal}</div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+
+  // Live update
+  if (state.tournamentCode && db) {
+    db.ref('tournaments/' + state.tournamentCode + '/scores').off();
+    db.ref('tournaments/' + state.tournamentCode + '/scores').on('value', () => {
+      if (document.getElementById('screenLeaderboard').classList.contains('active')) {
+        buildLeaderboard();
+      }
+    });
+  }
+}
+
+function calcShots(hole, vorgabe, si) {
+  if (vorgabe <= 0) return 0;
+  const siVal = si[hole-1] || hole;
+  let shots = 0;
+  if (siVal <= vorgabe) shots++;
+  if (siVal <= vorgabe - 18) shots++;
+  return shots;
+}
+
+// ====================================================
+// INIT
+// ====================================================
+window.addEventListener('load', async () => {
+  await loadCourses();
+});
+</script>
+</body>
+</html>
