@@ -1075,11 +1075,17 @@ async function createTournament() {
     tees: {}
   });
 
-  toast('✅ Turnier ' + code + ' erstellt!');
+  toast('✅ Turnier ' + code + ' erstellt! Jetzt Spieler hinzufügen.');
   state.tournamentCode = code;
   state.tournamentData = { name, format, rounds };
   document.getElementById('headerSub').textContent = code + ' · ' + name;
   loadActiveTournaments();
+  // Direkt zum Spieler-Tab wechseln
+  setTimeout(() => {
+    document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.admin-nav-btn')[1].classList.add('active');
+    renderAdminTab('spieler');
+  }, 500);
 }
 
 async function deleteTournament(code) {
@@ -1175,6 +1181,7 @@ async function loadPlayerList() {
 }
 
 async function addPlayer() {
+  if (!state.tournamentCode) { toast('❌ Bitte erst ein Turnier öffnen (Tab Turnier → Öffnen)'); return; }
   const name = document.getElementById('spName').value.trim();
   const hcp = parseFloat(document.getElementById('spHcp').value);
   const gender = document.getElementById('spGender').value;
@@ -1182,21 +1189,28 @@ async function addPlayer() {
 
   if (!name || isNaN(hcp)) { toast('❌ Name und HCP erforderlich'); return; }
 
+  await loadFirebase();
   const id = 'p' + Date.now();
-  await db.ref('tournaments/' + state.tournamentCode + '/players/' + id).set({
-    name, hcp, gender, tee,
-    addedAt: Date.now()
-  });
-
-  document.getElementById('spName').value = '';
-  document.getElementById('spHcp').value = '';
-  toast('✅ ' + name + ' hinzugefügt');
-  loadPlayerList();
+  try {
+    await db.ref('tournaments/' + state.tournamentCode + '/players/' + id).set({
+      name, hcp, gender, tee,
+      addedAt: Date.now(),
+      scores: {}
+    });
+    document.getElementById('spName').value = '';
+    document.getElementById('spHcp').value = '';
+    toast('✅ ' + name + ' hinzugefügt');
+    loadPlayerList();
+  } catch(e) {
+    toast('❌ Fehler beim Speichern: ' + e.message);
+  }
 }
 
 async function removePlayer(id) {
   if (!confirm('Spieler entfernen?')) return;
+  await loadFirebase();
   await db.ref('tournaments/' + state.tournamentCode + '/players/' + id).remove();
+  toast('🗑️ Spieler entfernt');
   loadPlayerList();
 }
 
