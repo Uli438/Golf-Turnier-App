@@ -307,7 +307,7 @@ async function aFlights(c){
     const ps=pArr(td&&td.players?td.players:{});
     const fls=td&&td.flights?td.flights:{};
     const asgn=new Set();
-    Object.values(fls).forEach(f=>{(Array.isArray(f.players)?f.players:Object.keys(f.players||{})).forEach(pid=>asgn.add(pid));});
+    Object.values(fls).forEach(f=>{fpIds(f.players).forEach(pid=>asgn.add(pid));});
     const unasgn=ps.filter(p=>!asgn.has(p.id));
     let html=`<div class="card"><div class="info-box">Turnier: <strong>${AT.code}</strong></div>
       <div class="card-t">✈️ Flights</div>
@@ -320,20 +320,20 @@ async function aFlights(c){
       <div style="font-size:13px;font-weight:600;margin-bottom:6px">Nicht zugewiesen (${unasgn.length}):</div>
       <div class="pool">${unasgn.map(p=>`<span class="chip ${p.gender==='f'?'f':''}" onclick="asnDialog('${p.id}','${esc(p.name)}')">${p.name.split(' ')[0]} (${p.hcp})</span>`).join('')}</div>
       <div id="fSlots">`;
-    Object.entries(fls).forEach(([fid,f])=>{const fp=Array.isArray(f.players)?f.players:Object.keys(f.players||{});const fpd=fp.map(pid=>ps.find(p=>p.id===pid)).filter(Boolean);html+=`<div class="fs"><div class="fs-hdr"><strong style="color:var(--pri)">Flight ${f.num||fid}</strong><div class="fx" style="gap:6px"><input type="time" value="${f.teeTime||''}" style="width:90px;padding:4px;font-size:12px;margin:0" onchange="setTT('${fid}',this.value)"><button class="btn btn-d btn-sm" onclick="delF('${fid}')">✕</button></div></div><div class="fdrop">${fpd.map(p=>`<span class="chip ${p.gender==='f'?'f':''}" onclick="remFF('${fid}','${p.id}')" title="Entfernen">${p.name.split(' ')[0]} (${p.hcp}) ✕</span>`).join('')}</div><div style="margin-top:6px"><button class="btn btn-o btn-sm" onclick="addFD('${fid}')">+ Spieler</button></div></div>`;});
+    Object.entries(fls).forEach(([fid,f])=>{const fp=fpIds(f.players);const fpd=fp.map(pid=>ps.find(p=>p.id===pid)).filter(Boolean);html+=`<div class="fs"><div class="fs-hdr"><strong style="color:var(--pri)">Flight ${f.num||fid}</strong><div class="fx" style="gap:6px"><input type="time" value="${f.teeTime||''}" style="width:90px;padding:4px;font-size:12px;margin:0" onchange="setTT('${fid}',this.value)"><button class="btn btn-d btn-sm" onclick="delF('${fid}')">✕</button></div></div><div class="fdrop">${fpd.map(p=>`<span class="chip ${p.gender==='f'?'f':''}" onclick="remFF('${fid}','${p.id}')" title="Entfernen">${p.name.split(' ')[0]} (${p.hcp}) ✕</span>`).join('')}</div><div style="margin-top:6px"><button class="btn btn-o btn-sm" onclick="addFD('${fid}')">+ Spieler</button></div></div>`;});
     html+='</div></div>';c.innerHTML=html;
   }catch(e){c.innerHTML='<div class="card"><p style="color:red">'+e.message+'</p></div>';}
 }
-async function addF(){if(!AT)return;try{const ex=await fbG('tournaments/'+AT.code+'/flights');const num=ex?Object.keys(ex).length+1:1;const fid='f'+Date.now();await fbS('tournaments/'+AT.code+'/flights/'+fid,{num,players:[],teeTime:''});aFlights(document.getElementById('aC'));}catch(e){toast('❌ '+e.message);}}
+async function addF(){if(!AT)return;try{const ex=await fbG('tournaments/'+AT.code+'/flights');const num=ex?Object.keys(ex).length+1:1;const fid='f'+Date.now();await fbS('tournaments/'+AT.code+'/flights/'+fid,{num,teeTime:''});aFlights(document.getElementById('aC'));}catch(e){toast('❌ '+e.message);}}
 async function delF(fid){if(!confirm('Flight löschen?'))return;await fbR('tournaments/'+AT.code+'/flights/'+fid);aFlights(document.getElementById('aC'));}
 async function setTT(fid,time){await fbS('tournaments/'+AT.code+'/flights/'+fid+'/teeTime',time);}
 function asnDialog(pid,pname){loadFB().then(async()=>{const fls=await fbG('tournaments/'+AT.code+'/flights');if(!fls){toast('❌ Erst einen Flight erstellen');return;}const opts=Object.entries(fls).map(([fid,f])=>`<option value="${fid}">Flight ${f.num||fid}${f.teeTime?' ('+f.teeTime+')':''}</option>`).join('');openM(pname+' zuweisen',`<label>Flight wählen</label><select id="aSel">${opts}</select>`,`<button class="btn btn-s" onclick="closeM()">Abbrechen</button><button class="btn btn-p" onclick="doAsn('${pid}')">Zuweisen</button>`);});}
-async function doAsn(pid){const fid=document.getElementById('aSel').value;try{const cur=await fbG('tournaments/'+AT.code+'/flights/'+fid+'/players');const arr=Array.isArray(cur)?[...cur]:[];if(!arr.includes(pid))arr.push(pid);await fbS('tournaments/'+AT.code+'/flights/'+fid+'/players',arr);closeM();aFlights(document.getElementById('aC'));}catch(e){toast('❌ '+e.message);}}
-function addFD(fid){loadFB().then(async()=>{const td=await fbG('tournaments/'+AT.code);const ps=pArr(td&&td.players?td.players:{});const fls=td&&td.flights?td.flights:{};const asgn=new Set();Object.entries(fls).forEach(([fid2,f])=>(Array.isArray(f.players)?f.players:Object.keys(f.players||{})).forEach(p=>asgn.add(p)));const avail=ps.filter(p=>!asgn.has(p.id));if(!avail.length){toast('Alle Spieler zugewiesen');return;}openM('Spieler hinzufügen',`<select id="aFSel">${avail.map(p=>`<option value="${p.id}">${p.name} (HCP ${p.hcp})</option>`).join('')}</select>`,`<button class="btn btn-s" onclick="closeM()">Abbrechen</button><button class="btn btn-p" onclick="doAddF('${fid}')">Hinzufügen</button>`);});}
-async function doAddF(fid){const pid=document.getElementById('aFSel').value;try{const cur=await fbG('tournaments/'+AT.code+'/flights/'+fid+'/players');const arr=Array.isArray(cur)?[...cur]:[];if(!arr.includes(pid))arr.push(pid);await fbS('tournaments/'+AT.code+'/flights/'+fid+'/players',arr);closeM();aFlights(document.getElementById('aC'));}catch(e){toast('❌ '+e.message);}}
-async function remFF(fid,pid){try{const cur=await fbG('tournaments/'+AT.code+'/flights/'+fid+'/players');const arr=(Array.isArray(cur)?cur:[]).filter(p=>p!==pid);await fbS('tournaments/'+AT.code+'/flights/'+fid+'/players',arr);aFlights(document.getElementById('aC'));}catch(e){toast('❌ '+e.message);}}
-async function autoFH(){if(!confirm('Auto nach HCP? Bestehende werden gelöscht.'))return;try{const ps=pArr(await fbG('tournaments/'+AT.code+'/players'));ps.sort((a,b)=>a.hcp-b.hcp);await fbR('tournaments/'+AT.code+'/flights');const fd={};for(let i=0;i<ps.length;i+=4){const fid='f'+(Math.floor(i/4)+1);fd[fid]={num:Math.floor(i/4)+1,players:ps.slice(i,i+4).map(p=>p.id),teeTime:''};}await fbS('tournaments/'+AT.code+'/flights',fd);toast('✅ Flights nach HCP');aFlights(document.getElementById('aC'));}catch(e){toast('❌ '+e.message);}}
-async function autoFM(){if(!confirm('Gemischte Flights? Bestehende werden gelöscht.'))return;try{const ps=pArr(await fbG('tournaments/'+AT.code+'/players'));ps.sort((a,b)=>b.hcp-a.hcp);await fbR('tournaments/'+AT.code+'/flights');const n=Math.ceil(ps.length/4);const grps=Array.from({length:n},()=>[]);ps.forEach((p,i)=>grps[i%n].push(p.id));const fd={};grps.forEach((g,i)=>{fd['f'+(i+1)]={num:i+1,players:g,teeTime:''};});await fbS('tournaments/'+AT.code+'/flights',fd);toast('✅ Gemischte Flights');aFlights(document.getElementById('aC'));}catch(e){toast('❌ '+e.message);}}
+async function doAsn(pid){const fid=document.getElementById('aSel').value;try{const cur=await fbG('tournaments/'+AT.code+'/flights/'+fid+'/players')||{};const obj=typeof cur==='object'&&!Array.isArray(cur)?{...cur}:arrToObj(Array.isArray(cur)?cur:[]);obj[pid]=true;await fbS('tournaments/'+AT.code+'/flights/'+fid+'/players',obj);closeM();toast('✅ Zugewiesen');aFlights(document.getElementById('aC'));}catch(e){toast('❌ '+e.message);}}
+function addFD(fid){loadFB().then(async()=>{const td=await fbG('tournaments/'+AT.code);const ps=pArr(td&&td.players?td.players:{});const fls=td&&td.flights?td.flights:{};const asgn=new Set();Object.entries(fls).forEach(([fid2,f])=>fpIds(f.players).forEach(p=>asgn.add(p)));const avail=ps.filter(p=>!asgn.has(p.id));if(!avail.length){toast('Alle Spieler zugewiesen');return;}openM('Spieler hinzufügen',`<select id="aFSel">${avail.map(p=>`<option value="${p.id}">${p.name} (HCP ${p.hcp})</option>`).join('')}</select>`,`<button class="btn btn-s" onclick="closeM()">Abbrechen</button><button class="btn btn-p" onclick="doAddF('${fid}')">Hinzufügen</button>`);});}
+async function doAddF(fid){const pid=document.getElementById('aFSel').value;try{const cur=await fbG('tournaments/'+AT.code+'/flights/'+fid+'/players')||{};const obj=typeof cur==='object'&&!Array.isArray(cur)?{...cur}:arrToObj(Array.isArray(cur)?cur:[]);obj[pid]=true;await fbS('tournaments/'+AT.code+'/flights/'+fid+'/players',obj);closeM();toast('✅ Hinzugefügt');aFlights(document.getElementById('aC'));}catch(e){toast('❌ '+e.message);}}
+async function remFF(fid,pid){if(!confirm('Spieler aus Flight entfernen?'))return;try{await fbR('tournaments/'+AT.code+'/flights/'+fid+'/players/'+pid);toast('✅ Entfernt');aFlights(document.getElementById('aC'));}catch(e){toast('❌ '+e.message);}}
+async function autoFH(){if(!confirm('Auto nach HCP? Bestehende werden gelöscht.'))return;try{const ps=pArr(await fbG('tournaments/'+AT.code+'/players'));ps.sort((a,b)=>a.hcp-b.hcp);await fbR('tournaments/'+AT.code+'/flights');const fd={};for(let i=0;i<ps.length;i+=4){const fid='f'+(Math.floor(i/4)+1);fd[fid]={num:Math.floor(i/4)+1,players:arrToObj(ps.slice(i,i+4).map(p=>p.id)),teeTime:''};}await fbS('tournaments/'+AT.code+'/flights',fd);toast('✅ Flights nach HCP');aFlights(document.getElementById('aC'));}catch(e){toast('❌ '+e.message);}}
+async function autoFM(){if(!confirm('Gemischte Flights? Bestehende werden gelöscht.'))return;try{const ps=pArr(await fbG('tournaments/'+AT.code+'/players'));ps.sort((a,b)=>b.hcp-a.hcp);await fbR('tournaments/'+AT.code+'/flights');const n=Math.ceil(ps.length/4);const grps=Array.from({length:n},()=>[]);ps.forEach((p,i)=>grps[i%n].push(p.id));const fd={};grps.forEach((g,i)=>{fd['f'+(i+1)]={num:i+1,players:arrToObj(g),teeTime:''};});await fbS('tournaments/'+AT.code+'/flights',fd);toast('✅ Gemischte Flights');aFlights(document.getElementById('aC'));}catch(e){toast('❌ '+e.message);}}
 async function clearF(){if(!confirm('Alle Flights löschen?'))return;await fbR('tournaments/'+AT.code+'/flights');aFlights(document.getElementById('aC'));}
 
 // ── Admin: Platz ──
@@ -389,7 +389,7 @@ async function joinTournament(){
     const found=ps.find(p=>p.name.toLowerCase()===name.toLowerCase());
     if(!found){toast('❌ Name nicht in der Teilnehmerliste');return;}
     const fls=td.flights||{};let mf=null,mfid=null;
-    Object.entries(fls).forEach(([fid,f])=>{const fp=Array.isArray(f.players)?f.players:Object.keys(f.players||{});if(fp.includes(found.id)){mf=f;mfid=fid;}});
+    Object.entries(fls).forEach(([fid,f])=>{if(fpIds(f.players).includes(found.id)){mf=f;mfid=fid;}});
     const pMap={};ps.forEach(p=>{pMap[p.id]=p;});
     S={code,tData:td,playerId:found.id,playerName:found.name,myFlight:mf,myFlightId:mfid,players:pMap,scores:{},currentHole:1,currentRound:1};
     document.getElementById('hdrT').textContent='⛳ '+(td.name||code);
@@ -409,7 +409,7 @@ function renderPS(){
   const mf=S.myFlight;
   // Flight info
   const fc=document.getElementById('flInfo');
-  if(mf){const fp=Array.isArray(mf.players)?mf.players:Object.keys(mf.players||{});const fpd=fp.map(pid=>S.players[pid]).filter(Boolean);fc.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><strong>Flight ${mf.num||'?'}</strong>${mf.teeTime?`<span class="badge bb">🕐 ${mf.teeTime}</span>`:''}<span class="badge bg">${td.format||'–'}</span></div><div style="display:flex;flex-wrap:wrap;gap:6px">${fpd.map(p=>`<span style="background:${p.gender==='f'?'#d63384':'var(--pri)'};color:#fff;padding:4px 10px;border-radius:12px;font-size:13px;font-weight:600">${p.name.split(' ')[0]} (${p.hcp})</span>`).join('')}</div>`;}
+  if(mf){const fp=fpIds(mf.players);const fpd=fp.map(pid=>S.players[pid]).filter(Boolean);fc.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><strong>Flight ${mf.num||'?'}</strong>${mf.teeTime?`<span class="badge bb">🕐 ${mf.teeTime}</span>`:''}<span class="badge bg">${td.format||'–'}</span></div><div style="display:flex;flex-wrap:wrap;gap:6px">${fpd.map(p=>`<span style="background:${p.gender==='f'?'#d63384':'var(--pri)'};color:#fff;padding:4px 10px;border-radius:12px;font-size:13px;font-weight:600">${p.name.split(' ')[0]} (${p.hcp})</span>`).join('')}</div>`;}
   else fc.innerHTML='<p style="color:var(--muted)">⚠️ Noch keinem Flight zugewiesen</p>';
   document.getElementById('hNum').textContent='Loch '+h;
   document.getElementById('hInf').textContent='Par '+(par[h-1]||4)+' · SI '+(si[h-1]||h);
@@ -419,7 +419,7 @@ function renderSE(hole,par,si,round){
   const c=document.getElementById('scoreE');
   const mf=S&&S.myFlight;
   if(!mf){c.innerHTML='';return;}
-  const fp=Array.isArray(mf.players)?mf.players:Object.keys(mf.players||{});
+  const fp=fpIds(mf.players);
   const rs=S.scores[round]||S.scores[String(round)]||{};
   const tc={gelb:'#f1c40f',weiß:'#bdc3c7',rot:'#e74c3c',blau:'#3498db',schwarz:'#2c3e50',gold:'#d4a017'};
   c.innerHTML=fp.map(pid=>{
@@ -508,6 +508,17 @@ async function buildLB(){
       ${res.map((r2,i)=>{const pc=i===0?'gold':i===1?'silver':i===2?'bronze':'';const col=tc[(r2.tee||'').toLowerCase()]||'#ccc';const sv=isS?r2.pts+' Pkt':(r2.g||'–');return`<div class="lbrow" style="${r2.id===S.playerId?'border:2px solid var(--pri)':''}"><div class="lbpos ${pc}">${i+1}</div><div style="flex:1"><div style="font-weight:600;font-size:14px">${r2.gender==='f'?'👩':'👨'} ${r2.name}</div><div style="font-size:12px;color:var(--muted)">HCP ${r2.hcp} · <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${col};vertical-align:middle"></span> ${r2.tee||''} · ${r2.h} Loch</div></div><div class="lbsc">${sv}</div></div>`;}).join('')}
     </div>`;
   }catch(e){c.innerHTML='<div class="card"><p style="color:red">'+e.message+'</p></div>';}
+}
+
+// ── Flight Player Helpers ──
+// Konvertiert Array von PIDs zu Objekt {pid: true} (Firebase löscht keine leeren Objekte)
+function arrToObj(arr){const o={};(arr||[]).forEach(pid=>{if(pid)o[pid]=true;});return o;}
+// Liest Flight-Players aus Firebase (kann Array oder {pid:true} Objekt sein)
+function fpIds(playersData){
+  if(!playersData)return[];
+  if(Array.isArray(playersData))return playersData.filter(Boolean);
+  // {pid: true} Format
+  return Object.entries(playersData).filter(([k,v])=>v===true||v).map(([k])=>k);
 }
 
 // ── Golf Math ──
